@@ -9,7 +9,11 @@ Transfer Qzone Emoji to text.
 <img src="https://img.shields.io/badge/python-3.8%2F3.9-blue">
 
 <a href="https://github.com/JamzumSum/QzEmoji/pulls">
-<img src="https://img.shields.io/tokei/lines/github/JamzumSum/QzEmoji?label=database">
+<img src="https://img.shields.io/tokei/lines/github/JamzumSum/QzEmoji?label=rules">
+</a>
+
+<a href="https://github.com/JamzumSum/QzEmoji/actions/workflows/python-app.yml">
+<img src="https://github.com/JamzumSum/QzEmoji/actions/workflows/python-app.yml/badge.svg">
 </a>
 
 </div>
@@ -40,9 +44,21 @@ Qzone似乎并没有提供表情序号到中文名称的接口. 通过爬虫和�
 
 ### Other Language
 
-下载`data/emoji.db`. (之后会发布到release)
+下载[emoji.db](https://github.com/JamzumSum/QzEmoji/releases).
 
-使用`sqlite`查询`emoji`表.
+使用`sqlite`查询`emoji`表:
+
+~~~ sql
+select text from emoji where id=400343;
+~~~
+
+## Build Database
+
+~~~ shell
+pip install -U yaml
+export PYTHONPATH=$(pwd)/src
+python script/build.py
+~~~
 
 ## Contribute
 
