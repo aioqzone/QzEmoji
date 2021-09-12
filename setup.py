@@ -3,6 +3,9 @@ from setuptools import find_packages, setup
 NAME = 'QzEmoji'
 LOWERCASE = NAME.lower()
 
+PACKAGE = find_packages(where='src')
+PACKAGE += [LOWERCASE + '.data']
+
 setup(
     name=NAME,
     version='0.1.0.dev1',
@@ -14,10 +17,10 @@ setup(
     python_requires=">=3.8",                      # for f-string and := op
     # install_requires=[],
     tests_require=['pytest'],
-    packages=find_packages(where='src'),
+    packages=PACKAGE,
     package_dir={
         "": 'src',
-        LOWERCASE + "": 'data'
+        LOWERCASE + ".data": 'data'
     },
     include_package_data=True,
 )
