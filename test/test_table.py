@@ -4,7 +4,7 @@ from qzemoji import query
 
 def test_hit():
     assert '🐷' == query('400343.gif')
-    assert '[/困]' == query(125)
+    assert '困' == query(125)
 
 
 def test_miss():
