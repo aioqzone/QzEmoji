@@ -1,0 +1,14 @@
+# config and cache
+__pycache__
+/.vscode
+/yapf_style.cfg
+/.env
+
+# temporary files
+/tmp
+/test.*
+
+# build
+/build
+/dist
+*.egg-info

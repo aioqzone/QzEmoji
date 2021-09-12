@@ -1,0 +1,6 @@
+# ignore when counting code lines
+
+/*
+!/data
+/data/*
+!/data/raw
