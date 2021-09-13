@@ -10,7 +10,7 @@ def _table(db_path: str = 'data/emoji.db', name: str = 'emoji'):
 
     # find database
     from pathlib import Path
-    toplevel = Path(__file__).parent.parent
+    toplevel = Path(__file__).parent
     pwd = Path('.')
     findin = [pwd, toplevel]
     if toplevel.name == 'src': findin.append(toplevel.parent)
