@@ -8,7 +8,7 @@ PACKAGE += [LOWERCASE + '.data']
 
 setup(
     name=NAME,
-    version='0.1.0.dev1',
+    version='0.1.1.dev1',
     description='Translate Qzone emoji to text',
     author='JamzumSum',
     author_email='zzzzss990315@gmail.com',

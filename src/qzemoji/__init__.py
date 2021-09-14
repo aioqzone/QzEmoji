@@ -5,9 +5,7 @@ _db = _tbl = None
 __all__ = ['query']
 
 
-def _table(db_path: str = 'data/emoji.db', name: str = 'emoji'):
-    global _db, _tbl
-
+def findDB(db_path: str):
     # find database
     from pathlib import Path
     toplevel = Path(__file__).parent
@@ -18,14 +16,17 @@ def _table(db_path: str = 'data/emoji.db', name: str = 'emoji'):
     for i in findin:
         i /= db_path
         if i.exists():
-            db_path = str(i.absolute())
-            break
-    else:
-        raise FileNotFoundError(db_path)
+            return str(i.absolute())
+    raise FileNotFoundError(db_path)
+
+
+def _table(db_path: str = 'data/emoji.db', name: str = 'emoji'):
+    global _db, _tbl
 
     # singleton
     if _tbl is None:
-        _db = sqlite3.connect(db_path)
+        db_path = findDB(db_path)
+        _db = sqlite3.connect(db_path, check_same_thread=False)
         _tbl = EmojiTable(name, _db.cursor())
     return _tbl
 
