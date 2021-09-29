@@ -2,9 +2,10 @@ import sqlite3
 from pathlib import Path
 
 from .emojitable import EmojiID, EmojiTable
+from urllib.parse import urlparse
 
 __version__ = '0.2'
-__all__ = ['query']
+__all__ = ['query', 'resolve']
 
 db = None
 
@@ -113,3 +114,22 @@ def query(name: EmojiID, db_path: str = None):
     else:
         db = DBMgr(db_path or 'data/emoji.db')
     return db.table[name]
+
+
+def resolve(url: str):
+    """resolve a url to `EmojiID.ext`
+
+    Args:
+        url (str): emoji url
+
+    Returns:
+        str: emoji filename w/o prefex 'e'
+
+    Example:
+    >>> from qzemoji import resolve
+    >>> resolve('http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
+    >>> '400343.gif'
+    """    
+    name = Path(urlparse(url).path).name
+    if name.startswith('e'): name = name[1:]
+    return name

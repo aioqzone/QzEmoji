@@ -15,7 +15,7 @@ setup(
     url='https://github.com/JamzumSum/QzEmoji',
     license="MIT",
     python_requires=">=3.8",                                                           # for f-string and := op
-    install_requires=["AssetsUpdater@https://github.com/JamzumSum/AssetsUpdater.git"],
+    install_requires=["AssetsUpdater @ git+https://github.com/JamzumSum/AssetsUpdater.git"],
     tests_require=['pytest'],
     packages=PACKAGE,
     package_dir={

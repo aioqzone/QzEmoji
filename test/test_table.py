@@ -1,5 +1,9 @@
 import pytest
-from qzemoji import query
+from qzemoji import query, resolve
+
+
+def test_resolve():
+    assert '400343.gif' == resolve('http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
 
 
 def test_autoUpdate():

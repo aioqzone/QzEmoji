@@ -28,6 +28,7 @@ Qzone似乎并没有提供表情序号到中文名称的接口. 通过爬虫和�
 
 首先通过正则表达式等等方式解析`id`:
 ~~~ python
+>>> from qzemoji import resolve
 >>> resolve('http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
 >>> '400343.gif'
 ~~~
