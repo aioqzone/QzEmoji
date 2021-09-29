@@ -4,8 +4,9 @@ from pathlib import Path
 from .emojitable import EmojiID, EmojiTable
 from urllib.parse import urlparse
 
-__version__ = '0.2'
 __all__ = ['query', 'resolve']
+with open(Path(__file__).with_name('VERSION')) as f:
+    __version__ = f.read()
 
 db = None
 
@@ -129,7 +130,7 @@ def resolve(url: str):
     >>> from qzemoji import resolve
     >>> resolve('http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
     >>> '400343.gif'
-    """    
+    """
     name = Path(urlparse(url).path).name
     if name.startswith('e'): name = name[1:]
     return name

@@ -1,5 +1,7 @@
 from setuptools import find_packages, setup
-from qzemoji import __version__
+
+with open('src/qzemoji/VERSION') as f:
+    __version__ = f.read()
 
 NAME = 'QzEmoji'
 LOWERCASE = NAME.lower()
@@ -14,8 +16,10 @@ setup(
     author_email='zzzzss990315@gmail.com',
     url='https://github.com/JamzumSum/QzEmoji',
     license="MIT",
-    python_requires=">=3.8",                                                           # for f-string and := op
-    install_requires=["AssetsUpdater @ git+https://github.com/JamzumSum/AssetsUpdater.git"],
+    python_requires=">=3.8",                                                 # for f-string and := op
+    install_requires=[
+        "AssetsUpdater @ git+https://github.com/JamzumSum/AssetsUpdater.git"
+    ],
     tests_require=['pytest'],
     packages=PACKAGE,
     package_dir={
