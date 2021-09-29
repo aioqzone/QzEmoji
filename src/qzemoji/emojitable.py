@@ -10,20 +10,6 @@ def arglike(i):
         str(i)
 
 
-def find_if(iter: Iterable[T], pred: Callable[[T], bool]) -> Optional[T]:
-    """As that in C++
-
-    Args:
-        iter (Iterable[T]): iterator
-        pred (Callable[[T], bool]): callable. return the first i if pred(i) == True
-
-    Returns:
-        Optional[T]: the first i that pred(i) == True
-    """
-    for i in iter:
-        if pred(i): return i
-
-
 class Table:
     order_on = None
 
@@ -32,9 +18,9 @@ class Table:
         name: str,
         cursor: sqlite3.Cursor,
         key: Dict[str, Any],
-        pkey: str = None
+        pkey: str
     ) -> None:
-        pkey = pkey or find_if(key.items(), lambda t: 'PRIMARY KEY' in t[1])[0]
+        pkey = pkey
         assert pkey and pkey in key
         self.name = name
         self.cursor = cursor

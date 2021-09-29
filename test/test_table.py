@@ -2,6 +2,12 @@ import pytest
 from qzemoji import query
 
 
+def test_autoUpdate():
+    from qzemoji import DBMgr
+    DBMgr.autoUpdate('data/emoji.db')
+    assert DBMgr.enable_auto_update == False
+
+
 def test_hit():
     assert '🐷' == query('400343.gif')
     assert '困' == query(125)
