@@ -43,6 +43,9 @@ def create_table(name: str):
 def dump_items(name: str = 'emoji'):
     conn, tbl = create_table(name)
     for k, v in collect_items():
+        if not v: 
+            print(f"{k} null value. Skipped.")
+            continue
         tbl[k] = v
     conn.commit()
     tbl.cursor.close()

@@ -114,6 +114,6 @@ python script/build.py
 
 
 
-[qzone2tg]: https://github.com/JamzumSum/Qzone2TG "Qzone2TG"
+[qzone2tg]: https://github.com/JamzumSum/Qzone2TG "Forward Qzone feeds to telegram"
 [principle]: https://github.com/JamzumSum/QzEmoji/discussions/2 "欢迎分享您的翻译!"
 [updater]: https://github.com/JamzumSum/AssetsUpdater "Update assets from network"
