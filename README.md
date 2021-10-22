@@ -6,7 +6,7 @@ Transfer Qzone Emoji to text.
 
 <div>
 
-<img src="https://img.shields.io/badge/python-3.8%2F3.9-blue">
+<img src="https://img.shields.io/badge/python-3.9-blue">
 
 <a href="https://github.com/JamzumSum/QzEmoji/pulls">
 <img src="https://img.shields.io/tokei/lines/github/JamzumSum/QzEmoji?label=rules">
