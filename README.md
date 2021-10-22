@@ -24,13 +24,16 @@ This project is a component of [Qzone2TG][qzone2tg].
 
 Qzone似乎并没有提供表情序号到中文名称的接口. 通过爬虫和观察js代码等等方式也并不能完全获取所有的表情名称. 本仓库试图建立这一转换的查询表.
 
+> 另: Qzone不仅不提供表情链接到中文/unicode表情的转换规则, 甚至还经常变更这一映射. 在`1.x`版本中, qzemoji使用图像哈希来检查变更(alpha). 
+> 映射规则被更改的id可能会在图像哈希库中直接找到它原本的名字. 
+
 ## Usage
 
 首先通过正则表达式等等方式解析`id`:
 ~~~ python
 >>> from qzemoji import resolve
 >>> resolve('http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
->>> '400343.gif'
+400343
 ~~~
 
 ### Python
@@ -38,9 +41,9 @@ Qzone似乎并没有提供表情序号到中文名称的接口. 通过爬虫和�
 ~~~ python
 >>> from qzemoji import query
 >>> query('400343.gif')
->>> '🐷'
+'🐷'
 >>> query(125)
->>> '困'
+'困'
 ~~~
 
 #### Specifying Path of Database
@@ -112,6 +115,13 @@ python script/build.py
 
 - [MIT](https://github.com/JamzumSum/QzEmoji/blob/main/LICENSE)
 
+### Third Party
+
+- aiohttp: [Apache-2.0](https://github.com/aio-libs/aiohttp/blob/master/LICENSE.txt)
+- aiofiles: [Apache-2.0](https://github.com/Tinche/aiofiles/blob/master/LICENSE)
+- opencv-python: https://github.com/opencv/opencv-python#licensing
+- sqlmodel: [MIT](https://github.com/tiangolo/sqlmodel/blob/main/LICENSE)
+- assetsupdater: [MIT](https://github.com/JamzumSum/AssetsUpdater/blob/master/LICENSE)
 
 
 [qzone2tg]: https://github.com/JamzumSum/Qzone2TG "Forward Qzone feeds to telegram"

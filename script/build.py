@@ -1,55 +1,44 @@
 import argparse
-import sqlite3
 from pathlib import Path
 
-import yaml
-from qzemoji.emojitable import EmojiTable
-
-
+from qzemoji.hash import hash_stream
+from qzemoji.sql import EmojiTable, HashTable
+from sqlmodel import create_engine
 
 RAW_ROOT = Path('data/raw')
+EMOJI_ROOT = Path('data/emoji')
 DB_ROOT = Path('data')
 YML_EXT = ['.yml', '.yaml']
 
 
-def collect_files():
-    for i in RAW_ROOT.iterdir():
-        if i.suffix in YML_EXT:
-            yield i
-
-
-def collect_items():
-    for f in collect_files():
-        with open(f, encoding='utf8') as f:
-            d: dict = yaml.safe_load(f) or {}
-            assert isinstance(d, dict)
-            yield from d.items()
-
-
 def clean():
+    skip = RAW_ROOT, EMOJI_ROOT
     for i in DB_ROOT.iterdir():
         if i.is_dir():
-            if i != RAW_ROOT: i.rmdir()
+            if i not in skip: i.rmdir()
         else:
             i.unlink()
 
 
 def create_table(name: str):
     db_path = (DB_ROOT / name).with_suffix('.db')
-    conn = sqlite3.connect(str(db_path))
-    return conn, EmojiTable('emoji', conn.cursor())
+    hash_path = db_path.with_suffix('.hash.db')
+    db_conn = create_engine('sqlite:///' + db_path.as_posix())
+    hash_conn = create_engine('sqlite:///' + hash_path.as_posix())
+    return EmojiTable(db_conn), HashTable(hash_conn)
 
 
 def dump_items(name: str = 'emoji'):
-    conn, tbl = create_table(name)
-    for k, v in collect_items():
-        if not v: 
+    emo, htb = create_table(name)
+    for k, v in hash_stream():
+        if not v.text:
             print(f"{k} null value. Skipped.")
             continue
-        tbl[k] = v
-    conn.commit()
-    tbl.cursor.close()
-    conn.close()
+        emo[k] = v.text
+        assert (v.rgb) not in htb
+        htb.add(v)
+    emo.sess.commit()
+    htb.sess.commit()
 
 
 def check_dirs():

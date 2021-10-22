@@ -7,8 +7,12 @@ __pycache__
 # temporary files
 /tmp
 /test.*
+/log
 
 # build
 /build
 /dist
 *.egg-info
+
+# data
+/data/emoji

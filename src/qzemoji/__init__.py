@@ -1,8 +1,9 @@
-import sqlite3
 from pathlib import Path
-
-from .emojitable import EmojiID, EmojiTable
 from urllib.parse import urlparse
+
+from sqlmodel import create_engine
+
+from .sql import EmojiID, EmojiTable
 
 __all__ = ['query', 'resolve']
 with open(Path(__file__).with_name('VERSION')) as f:
@@ -51,8 +52,11 @@ class DBMgr:
     def table(self):
         # singleton
         if self._tbl is None:
-            _db = sqlite3.connect(self._dbpath.as_posix(), check_same_thread=False)
-            self._tbl = EmojiTable(self.tbl_name, _db.cursor())
+            _db = create_engine(
+                'sqlite:///' + self._dbpath.as_posix(),
+                connect_args={'check_same_thread': False}
+            )
+            self._tbl = EmojiTable(_db)
         return self._tbl
 
     @classmethod
@@ -95,19 +99,19 @@ def query(name: EmojiID, db_path: str = None):
     """lookup for the emoji name.
 
     Args:
-        name (EmojiID): id.ext
-        db_path (str): database path. Default as `data/emoji.db`
+        `name` (EmojiID): id.ext
+        `db_path` (str): database path. Default as `data/emoji.db`
 
     Raises:
-        ValueError: if `name` cannot be cast to a integer id.
-        FileNotFoundError: if `db_path` not found.
+        `ValueError`: if `name` cannot be cast to a integer id.
+        `FileNotFoundError`: if `db_path` not found.
 
     Example:
     >>> from qzemoji import query
     >>> query('400343.gif')
-    >>> '🐷'
+    '🐷'
     >>> query(125)
-    >>> '困'
+    '困'
     """
     global db
     if db:
@@ -129,8 +133,8 @@ def resolve(url: str):
     Example:
     >>> from qzemoji import resolve
     >>> resolve('http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
-    >>> '400343.gif'
+    400343
     """
-    name = Path(urlparse(url).path).name
+    name = Path(urlparse(url).path).stem
     if name.startswith('e'): name = name[1:]
-    return name
+    return int(name)
