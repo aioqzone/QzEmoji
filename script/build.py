@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from qzemoji.hash import hash_stream
+from qzemoji.hash import hash_stream, prepare_png
 from qzemoji.sql import EmojiTable, HashTable
 from sqlmodel import create_engine
 
@@ -49,8 +49,14 @@ def check_dirs():
 if __name__ == '__main__':
     psr = argparse.ArgumentParser()
     psr.add_argument('-o', '--outname', default='emoji')
+    psr.add_argument('-v', '--verbose')
     arg = psr.parse_args()
+
+    if arg.verbose:
+        import qzemoji.hash.download
+        qzemoji.hash.download.verbose = True
 
     check_dirs()
     clean()
+    prepare_png()
     dump_items(arg.outname)

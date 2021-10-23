@@ -5,18 +5,20 @@ import cv2 as cv
 import numpy as np
 
 from ..collect import collect_items
-from .download import ROOT, async_dl
+from .download import ROOT, async_dl, emoji_bytes
 
 Mat = np.ndarray
 mul2 = np.power(2, np.arange(64, dtype=np.int64)[::-1])
 
 
 def prepare_png():
-    async_dl(*(int(Path(k).stem) for k, _ in collect_items()))
+    async_dl(*(int(Path(k).stem) if isinstance(k, str) else k for k, _ in collect_items()))
 
 
 def byte_stream():
     """eid, bytes, title
+
+    prepare_png first
     """
     for k, t in collect_items():
         p = ROOT / str(k)
