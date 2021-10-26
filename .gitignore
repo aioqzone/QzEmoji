@@ -15,5 +15,5 @@ __pycache__
 *.egg-info
 
 # data
-/data/emoji
-/data/emoji.hash.db
+/data
+!/data/raw

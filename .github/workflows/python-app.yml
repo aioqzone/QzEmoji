@@ -26,6 +26,11 @@ jobs:
           python -m pip install --upgrade pip pytest
           pip install -e .
 
+      - name: Build database
+        run: |
+          export PYTHONPATH=$(pwd)/src
+          python script/build.py
+
       - name: Test with pytest
         run: |
           export PYTHONPATH=$(pwd)/src
