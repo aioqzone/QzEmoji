@@ -61,26 +61,30 @@ class DBMgr:
 
     @classmethod
     @ShareNone
-    def autoUpdate(cls, download_to: str, size_callback=None):
+    def autoUpdate(cls, download_to: str, size_callback=None, force: bool = False):
         """update database from Github
 
         Args:
             download_to (str): download local path
             size_callback (Callable[[int], None], optional): Callback to recv download size. Defaults to None.
-
+            force (bool): download latest database without checking version
         """
         from updater import github as gh
         from updater.utils import get_latest_asset
         from updater.version import parse
 
-        download_to: Path = cls.searchDB(download_to)
-        proxy = None
-        if cls.proxy:
-            gh.register_proxy(proxy := {'https': cls.proxy})
+        try:
+            download_to: Path = cls.searchDB(download_to)
+        except FileNotFoundError:
+            force = True
+            download_to = Path(__file__).parent / download_to
+
+        proxy = {'https': cls.proxy} if cls.proxy else None
+        if proxy: gh.register_proxy(proxy)
 
         up = gh.GhUpdater(gh.Repo('JamzumSum', 'QzEmoji'))
         a = get_latest_asset(up, 'emoji.db', pre=True)
-        if parse(a.from_tag) <= parse(__version__):
+        if not force and parse(a.from_tag) <= parse(__version__):
             cls.enable_auto_update = False
             return
 

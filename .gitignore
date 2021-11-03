@@ -16,4 +16,5 @@ __pycache__
 
 # data
 /data
+/src/qzemoji/data
 !/data/raw
