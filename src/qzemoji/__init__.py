@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 from sqlmodel import create_engine
 
 from .sql import EmojiID, EmojiTable
+from .utils import ShareNone
 
 __all__ = ['query', 'resolve']
 with open(Path(__file__).with_name('VERSION')) as f:
@@ -13,7 +14,6 @@ db = None
 
 
 class DBMgr:
-    tbl_name: str = 'emoji'
     proxy: str = None
     _dbpath: Path = None
     enable_auto_update = True
@@ -60,6 +60,7 @@ class DBMgr:
         return self._tbl
 
     @classmethod
+    @ShareNone
     def autoUpdate(cls, download_to: str, size_callback=None):
         """update database from Github
 
@@ -67,8 +68,6 @@ class DBMgr:
             download_to (str): download local path
             size_callback (Callable[[int], None], optional): Callback to recv download size. Defaults to None.
 
-        Returns:
-            Path | None: If a new db file is downloaded, reture the Path object; else None.
         """
         from updater import github as gh
         from updater.utils import get_latest_asset
@@ -92,7 +91,6 @@ class DBMgr:
 
         download_to.with_suffix('.tmp').replace(download_to)
         cls.enable_auto_update = False
-        return download_to
 
 
 def query(name: EmojiID, db_path: str = None):

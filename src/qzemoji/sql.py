@@ -2,8 +2,9 @@ from abc import ABC, abstractproperty
 from typing import Callable, Generic, Iterable, Optional, TypeVar, Union
 
 from sqlalchemy.engine import Engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql.elements import ColumnElement as ColPred
-from sqlmodel import Field, Session, SQLModel, select
+from sqlmodel import Field, SQLModel, select
 
 RowDef = TypeVar('RowDef')
 Primary = TypeVar('Primary')
@@ -21,7 +22,7 @@ class Table(ABC, Generic[Primary, RowDef]):
 
     def __init__(self, engine: Engine, row_ty: RowDef) -> None:
         self.engine = engine
-        self.sess = Session(engine)
+        self.sess = scoped_session(sessionmaker(engine))
         self.ty = row_ty
 
     @abstractproperty
