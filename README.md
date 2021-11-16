@@ -120,7 +120,6 @@ python script/build.py
 - aiohttp: [Apache-2.0](https://github.com/aio-libs/aiohttp/blob/master/LICENSE.txt)
 - aiofiles: [Apache-2.0](https://github.com/Tinche/aiofiles/blob/master/LICENSE)
 - opencv-python: https://github.com/opencv/opencv-python#licensing
-- sqlmodel: [MIT](https://github.com/tiangolo/sqlmodel/blob/main/LICENSE)
 - assetsupdater: [MIT](https://github.com/JamzumSum/AssetsUpdater/blob/master/LICENSE)
 
 

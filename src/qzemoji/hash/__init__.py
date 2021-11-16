@@ -37,8 +37,8 @@ def b2mat(b: bytes) -> Mat:
 def dhash_c(img: Mat) -> tuple[Mat, Mat, Mat]:
     """calculate dhash of each channel (BGR)
     """
-    dmat: Mat = cv.resize(img, (8, 9), interpolation=cv.INTER_AREA)
-    dmat = dmat[:8] > dmat[1:]
+    dmat: Mat = cv.resize(img, (9, 8), interpolation=cv.INTER_AREA)
+    dmat = dmat[:, :8] > dmat[:, 1:]
     return [i.flatten() for i in np.split(dmat.reshape(64, 3), 3, axis=1)]
 
 

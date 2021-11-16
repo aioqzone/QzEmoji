@@ -12,11 +12,8 @@ YML_EXT = ['.yml', '.yaml']
 
 
 def clean():
-    skip = RAW_ROOT, EMOJI_ROOT
     for i in DB_ROOT.iterdir():
-        if i.is_dir():
-            if i not in skip: i.rmdir()
-        else:
+        if not i.is_dir():
             i.unlink()
 
 
