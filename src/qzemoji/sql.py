@@ -1,13 +1,14 @@
-from abc import ABC, abstractproperty
-from typing import Callable, Generic, Iterable, Optional, TypeVar, Union
+from abc import ABC, abstractmethod
+from typing import Callable, Iterable, MutableMapping, Optional, Union
 
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm.attributes import InstrumentedAttribute as Col
+from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.elements import ColumnElement as ColPred
 from sqlmodel import Field, SQLModel, select
 
-RowDef = TypeVar('RowDef')
-Primary = TypeVar('Primary')
+Primary = Col
 EmojiID = Union[int, str]
 
 
@@ -17,32 +18,40 @@ def ensure_eid(eid: EmojiID):
     return eid
 
 
-class Table(ABC, Generic[Primary, RowDef]):
-    order_on: Callable[[RowDef], int] = None
+class Table(ABC, MutableMapping[Primary, SQLModel]):
+    order_on: Callable[[SQLModel], int] = None
 
-    def __init__(self, engine: Engine, row_ty: RowDef) -> None:
+    def __init__(self, engine: Engine, row_ty: type[SQLModel], thread_safe=True) -> None:
         self.engine = engine
-        self.sess = scoped_session(sessionmaker(engine))
+        self.sess = scoped_session(sessionmaker(engine)) if thread_safe else Session(engine)
         self.ty = row_ty
 
-    @abstractproperty
-    def pkey(self) -> Primary:
+    @abstractmethod
+    def pkey(self, col: Union[type[SQLModel], SQLModel]) -> Union[Col, tuple[Col], Primary]:
         pass
 
-    def pkey_eq(self, i: Primary) -> tuple[ColPred]:
-        return (self.pkey == i, )
+    def pkey_eq(self, i: Primary) -> Iterable[ColPred]:
+        cols = self.pkey(self.ty)
+        if isinstance(cols, tuple):
+            return (c == a for c, a in zip(cols, i))
+        else:
+            return self.pkey(self.ty) == i,
 
-    def createTable(self, index: Iterable[str] = None):
+    def createTable(self):
         self.ty.metadata.create_all(self.engine)
 
-    def __getitem__(self, i: Primary) -> Optional[RowDef]:
+    def __getitem__(self, i: Primary) -> Optional[SQLModel]:
         state = select(self.ty).where(*self.pkey_eq(i))
         row = self.sess.execute(state).first()
         if row and len(row): return row[0]
 
-    def add(self, data: RowDef):
+    def add(self, data: SQLModel):
         self.sess.add(data)
         return data
+
+    def __setitem__(self, i: Primary, data: SQLModel) -> None:
+        assert i == self.pkey(data)
+        return self.add(data)
 
     def __delitem__(self, i: Primary):
         i = Table.__getitem__(self, i)
@@ -52,7 +61,7 @@ class Table(ABC, Generic[Primary, RowDef]):
     def __contains__(self, i: Primary):
         return Table.__getitem__(self, i)
 
-    def find(self, cond_sql: ColPred = None, order: Callable[[RowDef], int] = None):
+    def find(self, cond_sql: ColPred = None, order: Callable[[SQLModel], int] = order_on):
         state = select(self.ty)
         if cond_sql is not None: state = state.where(cond_sql)
         r = self.sess.execute(state).all()
@@ -61,10 +70,13 @@ class Table(ABC, Generic[Primary, RowDef]):
         return list(r)
 
     def __iter__(self):
-        yield from self.find(order=self.order_on)
+        yield from self.find()
 
     def __del__(self):
         self.sess.close()
+
+    def __len__(self) -> int:
+        return super().__len__()
 
 
 class EmojiTable(Table):
@@ -77,9 +89,8 @@ class EmojiTable(Table):
         super().__init__(engine, self.Emoji)
         self.createTable()
 
-    @property
-    def pkey(self) -> Primary:
-        return self.Emoji.eid
+    def pkey(self, col: Union[type[Emoji], Emoji]):
+        return col.eid
 
     def __getitem__(self, eid: EmojiID) -> Optional[str]:
         eid = ensure_eid(eid)
@@ -107,13 +118,8 @@ class HashTable(Table):
         super().__init__(engine, self.EmojiHash)
         self.createTable()
 
-    @property
-    def pkey(self) -> Primary:
+    def pkey(self, col: Union[type[EmojiHash], EmojiHash]):
         return self.EmojiHash.R, self.EmojiHash.G, self.EmojiHash.B
-
-    def pkey_eq(self, i: tuple[int, int, int]):
-        r, g, b = i
-        return self.EmojiHash.R == r, self.EmojiHash.G == g, self.EmojiHash.B == b
 
     def add(self, data: EmojiHash):
         r, g, b = data.rgb
