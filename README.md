@@ -80,7 +80,10 @@ qzemoji.DBMgr.autoUpdate('data/emoji.db', sizebar.update)
 目前从GitHub检查更新. 设置代理:
 ~~~ python
 import qzemoji
-qzemoji.DBMgr.proxy = "http://localhost:1234"
+qzemoji.DBMgr.register_proxy(
+    proxy='socks5://localhost:5678', 
+    auth={'username': 'user', 'password': 'pwd'}
+)
 ~~~
 
 > 使用[AssetsUpdater][updater]获取和下载更新. 其内部使用`requests`, 因此理论上也支持环境变量设置的代理.

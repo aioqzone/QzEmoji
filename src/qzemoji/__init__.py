@@ -2,6 +2,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from sqlmodel import create_engine
+from updater import github as gh
 
 from .sql import EmojiID, EmojiTable
 from .utils import ShareNone
@@ -14,13 +15,17 @@ db = None
 
 
 class DBMgr:
-    proxy: str = None
+    _proxy: dict = None     # proxy dict with auth. (https only)
     _dbpath: Path = None
     enable_auto_update = True
 
     def __init__(self, db_path: str) -> None:
         self.db_path = db_path
         if self.enable_auto_update: self.autoUpdate(db_path)
+
+    @classmethod
+    def register_proxy(cls, proxy: str, auth: dict = None):
+        cls._proxy = gh.register_proxy(proxy, auth)
 
     @staticmethod
     def searchDB(db_path: str):
@@ -53,8 +58,7 @@ class DBMgr:
         # singleton
         if self._tbl is None:
             _db = create_engine(
-                'sqlite:///' + self._dbpath.as_posix(),
-                connect_args={'check_same_thread': False}
+                'sqlite:///' + self._dbpath.as_posix(), connect_args={'check_same_thread': False}
             )
             self._tbl = EmojiTable(_db)
         return self._tbl
@@ -69,7 +73,6 @@ class DBMgr:
             size_callback (Callable[[int], None], optional): Callback to recv download size. Defaults to None.
             force (bool): download latest database without checking version
         """
-        from updater import github as gh
         from updater.utils import get_latest_asset
         from updater.version import parse
 
@@ -79,9 +82,6 @@ class DBMgr:
             force = True
             download_to = Path(__file__).parent / download_to
 
-        proxy = {'https': cls.proxy} if cls.proxy else None
-        if proxy: gh.register_proxy(proxy)
-
         up = gh.GhUpdater(gh.Repo('JamzumSum', 'QzEmoji'))
         a = get_latest_asset(up, 'emoji.db', pre=True)
         if not force and parse(a.from_tag) <= parse(__version__):
@@ -89,8 +89,7 @@ class DBMgr:
             return
 
         from updater.download import download
-        for i in download(a.download_url, download_to.with_suffix('.tmp'),
-                          proxies=proxy):
+        for i in download(a.download_url, download_to.with_suffix('.tmp'), proxies=cls._proxy):
             if size_callback: size_callback(i)
 
         download_to.with_suffix('.tmp').replace(download_to)
