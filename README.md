@@ -1,6 +1,6 @@
 # QzEmoji
 
-Transfer Qzone Emoji to text.
+Transfer Qzone Emoji ID to text.
 
 将Qzone表情链接转换为文字.
 
@@ -24,106 +24,92 @@ This project is a component of [Qzone2TG][qzone2tg].
 
 Qzone似乎并没有提供表情序号到中文名称的接口. 通过爬虫和观察js代码等等方式也并不能完全获取所有的表情名称. 本仓库试图建立这一转换的查询表.
 
-> 另: Qzone不仅不提供表情链接到中文/unicode表情的转换规则, 甚至还经常变更这一映射. 在`1.x`版本中, qzemoji使用图像哈希来检查变更(alpha). 
-> 映射规则被更改的id可能会在图像哈希库中直接找到它原本的名字. 
-
 ## Usage
 
 首先通过正则表达式等等方式解析`id`:
-~~~ python
->>> from qzemoji import resolve
->>> resolve('http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
+
+``` python
+>>> import qzemoji as qe
+>>> from urllib.parse import urlparse
+>>> qe.resolve(url=urlparse('http://qzonestyle.gtimg.cn/qzone/em/e400343.gif'))
 400343
-~~~
+>>> qe.resolve(tag='[em]e400343[/em]')
+400343
+>>> qe.resolve('no kwargs specified')
+AssertionError
+>>> qe.resolve(tag='[em] e400343[/em]')
+ValueError('[em] e400343[/em]')
+```
 
-### Python
+### Query in Python
 
-~~~ python
->>> from qzemoji import query
->>> query('400343.gif')
+``` python
+>>> qe.proxy = "http://localhost:1234"
+>>> await qe.init()     # will auto update database, so set a proxy in advance.
+>>> await qe.query(400343)
 '🐷'
->>> query(125)
-'困'
-~~~
-
-#### Specifying Path of Database
-
-给定一个相对路径, 默认在当前目录和包顶级目录(`__init__.py`的父目录)下搜索. 前者应对develop install, 后者应对正常的用户安装. 不支持更改search root, 特殊需求可以使用绝对路径或者修改源码.
-
-在这两个起始位置下, 默认查找的路径是`data/emoji.db`. 通过以下方式修改这个路径:
-
-~~~ python
-import qzemoji
-query(101, 'tmp/new_download.db')   # specify the path for the first time
-query(102)  # the path is saved internally and can be omitted
-~~~
+```
 
 #### Update Database
 
 从`0.2`起, 第一次查询前会试图更新数据库.
 
 禁用自动更新:
-~~~ python
-import qzemoji
-qzemoji.DBMgr.enable_auto_update = False
-~~~
+``` python
+qe.enable_auto_update = False
+```
 
 自动更新每次启动只会运行一次. 提前调用更新以免拖慢您的第一次查询(推荐):
-~~~ python
-import qzemoji
-qzemoji.DBMgr.autoUpdate('data/emoji.db')
-
-# 支持文件大小回调(int->None):
-qzemoji.DBMgr.autoUpdate('data/emoji.db', sizebar.update)
-~~~
+``` python
+>>> qe.proxy = "http://localhost:1234"
+>>> await qe.auto_update()
+```
 
 目前从GitHub检查更新. 设置代理:
-~~~ python
-import qzemoji
-qzemoji.DBMgr.register_proxy(
-    proxy='socks5://localhost:5678', 
-    auth={'username': 'user', 'password': 'pwd'}
-)
-~~~
+``` python
+>>> qe.proxy = "http://localhost:1234"
+```
 
-> 使用[AssetsUpdater][updater]获取和下载更新. 其内部使用`requests`, 因此理论上也支持环境变量设置的代理.
-
-### Other Language
+### Query in SQL
 
 下载[emoji.db](https://github.com/JamzumSum/QzEmoji/releases).
 
 使用`sqlite`查询`emoji`表:
 
+|column |description    |
+|:-----:|:--------------|
+|eid    |Emoji ID       |
+|text   |Corresponding text|
+
 ~~~ sql
-select text from emoji where id=400343;
+select text from emoji where eid=400343;
+~~~
+
+### Customize Your Copy
+
+自动更新会为您留下一个副本`emoji.db.bak`，您可以随意修改`emoji.db`以适应用户的需要.
+
+~~~ python
+>>> qe.set(403003, 'Hello QzEmoji')
+>>> qe.query(430003)
+'Hello QzEmoji'
 ~~~
 
 ## Build Database
 
-~~~ shell
-pip install -U yaml
-export PYTHONPATH=$(pwd)/src
+``` shell
+pip install -U .[build]
+export PYTHONPATH=./src:$PYTHONPATH # on windows, the seperate char is ; instead of :
 python script/build.py
-~~~
+```
 
 ## Contribute
 
-![](https://img.shields.io/github/forks/JamzumSum/QzEmoji?style=social)
-
-本质上这是一个翻译项目. 因此我把它独立出来并希望获得社区的支持. 我们欢迎任何人提交PR, 并将尽快审核.
-
-翻译准则见[Annoucement][principle]
+See [CONTRIBUTING](CONTRIBUTING.md)
 
 ## License
 
 - [MIT](https://github.com/JamzumSum/QzEmoji/blob/main/LICENSE)
-
-### Third Party
-
-- aiohttp: [Apache-2.0](https://github.com/aio-libs/aiohttp/blob/master/LICENSE.txt)
-- aiofiles: [Apache-2.0](https://github.com/Tinche/aiofiles/blob/master/LICENSE)
-- opencv-python: https://github.com/opencv/opencv-python#licensing
-- assetsupdater: [MIT](https://github.com/JamzumSum/AssetsUpdater/blob/master/LICENSE)
 
 
 [qzone2tg]: https://github.com/JamzumSum/Qzone2TG "Forward Qzone feeds to telegram"

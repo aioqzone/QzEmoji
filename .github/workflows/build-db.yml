@@ -1,13 +1,12 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Test and Build
+name: Build Database only
 
 on:
-  push:
-    paths:
-      - "src/**"
-      - 'setup.cfg'
+  pull_request:
+    types:
+      - closed
 
 jobs:
   build:
@@ -26,26 +25,18 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install -U pip pytest pytest-asyncio build
+          python -m pip install -U pip
           pip install .[build]
-
-      - name: Test with pytest
-        run: |
-          export PYTHONPATH=$(pwd)/src
-          python -m pytest test
 
       - name: Build database and wheel
         run: |
           export PYTHONPATH=$(pwd)/src
           python script/build.py
-          python -m build
 
       - name: Draft a release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            dist/*
-            data/emoji.db
-          tag_name: $(cat $(pwd)/src/VERSION)
-          body: ${{ github.event.head_commit.message }} # only push event has head_commit
+          files: data/emoji.db
+          tag_name: $(cat ./src/VERSION)
+          body: ${{ github.event.pull_request.body }}
           draft: true

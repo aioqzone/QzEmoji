@@ -1,2 +1,1 @@
-include data/*.db
 include src/qzemoji/VERSION

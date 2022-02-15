@@ -1,59 +1,50 @@
 import argparse
+import asyncio
 from pathlib import Path
 
-from qzemoji.hash import hash_stream, prepare_png
-from qzemoji.sql import EmojiTable, HashTable
-from sqlmodel import create_engine
+import yaml
+
+from qzemoji.orm import AsyncEnginew
+from qzemoji.orm import EmojiOrm
+from qzemoji.orm import EmojiTable
 
 RAW_ROOT = Path('data/raw')
-EMOJI_ROOT = Path('data/emoji')
-DB_ROOT = Path('data')
+DB_PATH = Path('data/emoji.db')
 YML_EXT = ['.yml', '.yaml']
 
 
-def clean():
-    for i in DB_ROOT.iterdir():
-        if not i.is_dir():
-            i.unlink()
+def prepare():
+    RAW_ROOT.mkdir(parents=True, exist_ok=True)
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    DB_PATH.unlink(missing_ok=True)
 
 
-def create_table(name: str):
-    db_path = (DB_ROOT / name).with_suffix('.db')
-    hash_path = db_path.with_suffix('.hash.db')
-    db_conn = create_engine('sqlite:///' + db_path.as_posix())
-    hash_conn = create_engine('sqlite:///' + hash_path.as_posix())
-    return EmojiTable(db_conn), HashTable(hash_conn)
+def item_stream():
+    for p in RAW_ROOT.iterdir():
+        if not p.suffix in YML_EXT: continue
+        with open(p, encoding='utf8') as f:
+            d: dict[int, str] = yaml.safe_load(f)
+        yield from d.items()
 
 
-def dump_items(name: str = 'emoji'):
-    emo, htb = create_table(name)
-    for k, v in hash_stream():
-        if not v.text:
-            print(f"{k} null value. Skipped.")
-            continue
-        emo[k] = v.text
-        assert (v.rgb) not in htb
-        htb.add(v)
-    emo.sess.commit()
-    htb.sess.commit()
-
-
-def check_dirs():
-    for i in [DB_ROOT, RAW_ROOT]:
-        if not i.exists(): i.mkdir(parents=True, exist_ok=True)
+async def dump_items():
+    async with AsyncEnginew.sqlite3(DB_PATH) as engine:
+        tbl = EmojiTable(engine)
+        await tbl.create()
+        async with tbl.sess() as sess:
+            async with sess.begin():
+                for eid, text in item_stream():
+                    if not text:
+                        print(f"{eid} null value. Skipped.")
+                        continue
+                    sess.add(EmojiOrm(eid=eid, text=text))
+                await sess.commit()
 
 
 if __name__ == '__main__':
     psr = argparse.ArgumentParser()
-    psr.add_argument('-o', '--outname', default='emoji')
-    psr.add_argument('-v', '--verbose')
+    psr.add_argument('-D', '--debug', help='asyncio debug mode', action='store_true')
     arg = psr.parse_args()
 
-    if arg.verbose:
-        import qzemoji.hash.download
-        qzemoji.hash.download.verbose = True
-
-    check_dirs()
-    clean()
-    prepare_png()
-    dump_items(arg.outname)
+    prepare()
+    asyncio.run(dump_items(), debug=arg.debug)
