@@ -1,6 +1,9 @@
+from cgitb import reset
 from pathlib import Path
 from typing import Callable, cast, Optional, Union
+from unittest import result
 
+from sqlalchemy import inspect
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +17,13 @@ Base = declarative_base()
 
 class EmojiOrm(Base):    # type: ignore
     __tablename__ = 'Emoji'
+
+    eid = sa.Column(sa.Integer, primary_key=True)
+    text = sa.Column(sa.VARCHAR)
+
+
+class MyEmoji(Base):    # type: ignore
+    __tablename__ = 'MyEmoji'
 
     eid = sa.Column(sa.Integer, primary_key=True)
     text = sa.Column(sa.VARCHAR)
@@ -46,24 +56,34 @@ class EmojiTable:
 
     async def create(self):
         """
-        The create function creates a new table in the database.
+        The create function creates `Emoji` and `MyEmoji` table in the database.
         It takes no arguments and returns nothing.
         """
-        
+
         async with self.engine.begin() as conn:
-            await conn.run_sync(EmojiOrm.metadata.create_all)
+            await conn.run_sync(Base.metadata.create_all)    # type: ignore
+
+    async def is_corrupt(self) -> bool:
+        async with self.engine.begin() as conn:
+            return not await conn.run_sync(
+                lambda c: (insp := sa.inspect(c)).has_table('Emoji') and insp.has_table('MyEmoji')
+            )
 
     async def query(self, eid: int, default: Union[Callable[[int], str], str] = None) -> str:
         """
         The query function takes an emoji ID and returns the corresponding string.
         If no emoji is found, it will return string identified by `default`.
-        
+
         :param eid: Used to identify the emoji.
         :param default: Used to specify a default value, defaults to return str(eid).
         :return: a string representation of the emoji.
         """
 
+        stmt = select(MyEmoji).where(MyEmoji.eid == eid)
         async with self.sess() as sess:
+            result = await sess.execute(stmt)
+            r: Optional[MyEmoji] = result.scalar()
+            if r: return cast(str, r.text)
             stmt = select(EmojiOrm).where(EmojiOrm.eid == eid)
             result = await sess.execute(stmt)
         r: Optional[EmojiOrm] = result.scalar()
@@ -78,19 +98,43 @@ class EmojiTable:
         It takes three arguments: eid, text, and flush.
         eid is the id of the emoji you want to change.
         text is what you want to set it's current text into.
-        
+
         :param eid: Used to identify the emoji.
         :param text: Used to set the text of an emoji.
         :return: None.
         """
-        
+
         async with self.sess() as sess:
             async with sess.begin():
-                result = await sess.execute(select(EmojiOrm).where(EmojiOrm.eid == eid))
+                result = await sess.execute(select(MyEmoji).where(MyEmoji.eid == eid))
                 if (prev := result.scalar()):
                     # if exist: update
                     prev.text = text
                 else:
                     # not exist: add
-                    sess.add(EmojiOrm(eid=eid, text=text))
+                    sess.add(MyEmoji(eid=eid, text=text))
             await sess.commit()
+
+    async def update(self, engine: AsyncEngine):
+        """
+        The update function is used to update the database with new data.
+        It drops `Emoji` table in current database, and import all data from the given engine.
+
+        :param engine: Engine to a new database to get data from.
+        :return: None.
+        """
+
+        sess = sessionmaker(engine, class_=AsyncSession)
+        stmt = select(EmojiOrm)
+        async with self.engine.begin() as conn:
+            # drop if exists, and create again
+            await conn.run_sync(
+                lambda c: sa.inspect(c).has_table(EmojiOrm.__tablename__) and EmojiOrm.__table__.
+                drop(c) or EmojiOrm.metadata.create_all(c)
+            )
+        async with self.sess() as os, os.begin():
+            async with sess() as ns:
+                objs = (await ns.execute(stmt)).scalars().all()
+            # TODO: waiting for improvement
+            os.add_all([EmojiOrm(eid=i.eid, text=i.text) for i in objs])
+            await os.commit()

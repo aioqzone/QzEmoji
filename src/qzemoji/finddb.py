@@ -12,26 +12,27 @@ REPO = gh.Repo('JamzumSum', 'QzEmoji')
 class FindDB:
     """This class can download database from source or find existing database on local storage."""
     download_to = Path('data/emoji.db')
+    my_db = Path('data/myemoji.db')
 
     @classmethod
     async def download(cls, proxy: str = None, current_version: str = None):
         """
         The download function downloads the latest version of the emoji database from GitHub.
         If there is no newer version, it does nothing.
-        
+
         :param proxy: Used to pass a proxy to the download function, defaults to None.
         :param current_version: Used to check if the current version of the plugin is greater than or equal to the one on GitHub, defaults to None.
-        :return: None.
+        :return: if downloaded.
         """
 
         if proxy: gh.register_proxy(proxy)
         up = gh.GhUpdater(REPO)
         a = get_latest_asset(up, 'emoji.db', pre=True)
         if current_version and parse(a.from_tag) <= parse(current_version):
-            return
+            return False
 
         await adownload(a.download_url, cls.download_to, proxy=proxy)
-        shutil.copy(cls.download_to, cls.download_to.with_suffix('.db.bak'))
+        return True
 
     @classmethod
     async def find(cls, proxy: str = None) -> Path:
@@ -42,7 +43,8 @@ class FindDB:
         :return: the path to the database.
         """
 
-        if cls.download_to.exists(): return cls.download_to
+        if cls.my_db.exists(): return cls.my_db
         await cls.download(proxy)
-        assert cls.download_to.exists()
-        return cls.download_to
+        shutil.move(cls.download_to, cls.my_db)
+        assert cls.my_db.exists()
+        return cls.my_db

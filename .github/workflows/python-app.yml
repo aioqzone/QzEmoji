@@ -46,6 +46,8 @@ jobs:
           files: |
             dist/*
             data/emoji.db
-          tag_name: $(cat $(pwd)/src/VERSION)
+          tag_name: ${{ env.VERSION }}
           body: ${{ github.event.head_commit.message }} # only push event has head_commit
           draft: true
+        env:
+          VERSION: $(cat ./src/VERSION)

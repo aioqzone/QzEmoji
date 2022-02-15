@@ -29,26 +29,38 @@ with open(Path(__file__).with_name('VERSION')) as f:
 
 async def _table():
     async with AsyncEnginew.sqlite3(await FindDB.find()) as engine:
-        yield EmojiTable(engine)
+        tbl = EmojiTable(engine)
+        while True:
+            yield tbl
 
 
 async def _makefuncs():
     global query, set
-    if not query:
-        tbl = (await _table().__anext__())
+    if query and set: return
+    async for tbl in _table():
         query = tbl.query
         set = tbl.set
+        return
 
 
 async def auto_update():
     global enable_auto_update
     if enable_auto_update:
         try:
-            await FindDB.download(proxy, __version__)
+            downloaded = await FindDB.download(proxy, __version__)
         except:
             logging.error("Failed to download database", exc_info=True)
+            downloaded = False
         finally:
             enable_auto_update = False
+
+        if not downloaded: return
+        assert FindDB.download_to.exists()
+
+        async with AsyncEnginew.sqlite3(FindDB.download_to) as engine:
+            async for tbl in _table():
+                await tbl.update(engine)
+                return
 
 
 async def init():

@@ -19,6 +19,14 @@ async def test_autoUpdate():
     assert qe.enable_auto_update == False
 
 
+async def test_update():
+    await qe.FindDB.download()
+    async with qe.orm.AsyncEnginew.sqlite3(qe.FindDB.download_to, echo=True) as engine:
+        tbl = await qe._table().__anext__()
+        await tbl.update(engine)
+        assert await tbl.query(100) != '100'
+
+
 async def test_hit():
     assert '🐷' == await qe.query(400343)
     assert '困' == await qe.query(125)
