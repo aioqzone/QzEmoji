@@ -30,6 +30,8 @@ with open(Path(__file__).with_name('VERSION')) as f:
 async def _table():
     async with AsyncEnginew.sqlite3(await FindDB.find()) as engine:
         tbl = EmojiTable(engine)
+        await tbl.create()
+        assert not await tbl.is_corrupt()
         while True:
             yield tbl
 

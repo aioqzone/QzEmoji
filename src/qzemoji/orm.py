@@ -1,9 +1,6 @@
-from cgitb import reset
 from pathlib import Path
 from typing import Callable, cast, Optional, Union
-from unittest import result
 
-from sqlalchemy import inspect
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -61,7 +58,7 @@ class EmojiTable:
         """
 
         async with self.engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)    # type: ignore
+            await conn.run_sync(Base.metadata.create_all)   # type: ignore
 
     async def is_corrupt(self) -> bool:
         async with self.engine.begin() as conn:
