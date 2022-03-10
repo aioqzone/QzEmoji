@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", 3.7]
+        python-version: ["3.10", "3.7"]
 
     steps:
       #----------------------------------------------
@@ -50,14 +50,13 @@ jobs:
       #  build package and database, draft a release
       #----------------------------------------------
       - name: Build database and wheel
-        if: ${{ matrix.python-version }} == "3.7"
+        if: "matrix.python-version == '3.7'"
         run: |
-          export PYTHONPATH=$(pwd)/src
           python script/build.py
           poetry build
 
       - name: Draft a release
-        if: ${{ matrix.python-version }} == "3.7"
+        if: "matrix.python-version == '3.7'"
         uses: softprops/action-gh-release@v1
         with:
           files: |

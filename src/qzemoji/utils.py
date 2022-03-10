@@ -1,9 +1,10 @@
 from pathlib import Path
 import re
+from typing import Optional
 from urllib.parse import ParseResult
 
 
-def resolve(*, url: ParseResult = None, tag: str = None):
+def resolve(*, url: Optional[ParseResult] = None, tag: Optional[str] = None):
     """
     The resolve function takes either a URL or a tag as an argument, and returns the emoji ID.
 
@@ -34,11 +35,14 @@ def resolve(*, url: ParseResult = None, tag: str = None):
         name: str = m.group(1)
     else:
         assert url
-        name = Path(url.path).stem.removeprefix("e")
+        name = Path(url.path).stem
+        if name.endswith("e"):
+            # py39- has no removeprefix
+            name = name[1:]
     return int(name)
 
 
-def build_html(eid: int, host="qzonestyle.gtimg.cn", ext="png"):
+def build_html(eid: int, host: str = "qzonestyle.gtimg.cn", ext: str = "png"):
     return f"http://{host}/qzone/em/e{eid}.{ext}"
 
 
