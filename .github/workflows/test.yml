@@ -1,0 +1,67 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Test and Build
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - '.github/workflows/**'
+      - 'pyproject.toml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.10, 3.7]
+
+    steps:
+      #----------------------------------------------
+      #       check-out repo and set-up python
+      #----------------------------------------------
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      #----------------------------------------------
+      #  -----  install & configure poetry  -----
+      #----------------------------------------------
+      - name: Install Poetry Action
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      #----------------------------------------------
+      # install your root project, if required
+      #----------------------------------------------
+      - name: Install library
+        run: poetry install --no-interaction -E build
+      #----------------------------------------------
+      #    add matrix specifics and run test suite
+      #----------------------------------------------
+      - name: Test with pytest
+        run: |
+          poetry run pytest test
+      #----------------------------------------------
+      #  build package and database, draft a release
+      #----------------------------------------------
+      - name: Build database and wheel
+        if: ${{ matrix.python-version }} == "3.7"
+        run: |
+          export PYTHONPATH=$(pwd)/src
+          python script/build.py
+          poetry build
+
+      - name: Draft a release
+        if: ${{ matrix.python-version }} == "3.7"
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*
+            data/emoji.db
+          body: ${{ github.event.head_commit.message }} # only push event has head_commit
+          draft: true

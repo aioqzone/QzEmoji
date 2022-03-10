@@ -1,22 +1,13 @@
 # QzEmoji
 
-Transfer Qzone Emoji ID to text.
+Translate Qzone Emoji link to text.
 
 将Qzone表情链接转换为文字.
 
-<div>
-
-<img src="https://img.shields.io/badge/python-3.9-blue">
-
-<a href="https://github.com/JamzumSum/QzEmoji/pulls">
-<img src="https://img.shields.io/tokei/lines/github/JamzumSum/QzEmoji?label=rules">
-</a>
-
-<a href="https://github.com/JamzumSum/QzEmoji/actions/workflows/python-app.yml">
-<img src="https://github.com/JamzumSum/QzEmoji/actions/workflows/python-app.yml/badge.svg">
-</a>
-
-</div>
+[![python](https://img.shields.io/badge/python-%E2%89%A53.7%2C%3C4.0-blue)][homepage]
+[![Test](https://github.com/JamzumSum/QzEmoji/actions/workflows/test.yml/badge.svg?branch=async)](https://github.com/JamzumSum/QzEmoji/blob/async/.github/workflows/test.yml)
+[![rules](https://img.shields.io/tokei/lines/github/JamzumSum/QzEmoji?label=rules)](CONTRIBUTING.md)
+[![black](https://img.shields.io/badge/code%20style-black-000000)](https://github.com/psf/black)
 
 This project is a component of [Qzone2TG][qzone2tg].
 
@@ -115,3 +106,4 @@ See [CONTRIBUTING](CONTRIBUTING.md)
 [qzone2tg]: https://github.com/JamzumSum/Qzone2TG "Forward Qzone feeds to telegram"
 [principle]: https://github.com/JamzumSum/QzEmoji/discussions/2 "欢迎分享您的翻译!"
 [updater]: https://github.com/JamzumSum/AssetsUpdater "Update assets from network"
+[homepage]: https://github.com/JamzumSum/QzEmoji "Translate Qzone Emoji link to text."

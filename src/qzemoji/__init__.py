@@ -10,7 +10,6 @@
 """
 
 import logging
-from pathlib import Path
 from typing import Optional
 
 from .finddb import FindDB
@@ -21,10 +20,9 @@ from .utils import resolve
 proxy: Optional[str] = None
 enable_auto_update = True
 query = set = None
-__version__ = None
+__version__ = "2.1.1a1"
 
-with open(Path(__file__).with_name('VERSION')) as f:
-    __version__ = f.read()
+__all__ = ["auto_update", "init", "resolve", "query", "proxy", "enable_auto_update"]
 
 
 async def _table():
@@ -38,7 +36,8 @@ async def _table():
 
 async def _makefuncs():
     global query, set
-    if query and set: return
+    if query and set:
+        return
     async for tbl in _table():
         query = tbl.query
         set = tbl.set
@@ -56,7 +55,8 @@ async def auto_update():
         finally:
             enable_auto_update = False
 
-        if not downloaded: return
+        if not downloaded:
+            return
         assert FindDB.download_to.exists()
 
         async with AsyncEnginew.sqlite3(FindDB.download_to) as engine:

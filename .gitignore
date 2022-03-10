@@ -1,8 +1,9 @@
 # config and cache
 __pycache__
 /.vscode
-/yapf_style.cfg
-/.env
+.env
+.venv
+poetry.lock
 
 # temporary files
 /tmp
@@ -15,6 +16,5 @@ __pycache__
 *.egg-info
 
 # data
-/data
-/src/qzemoji/data
+/data/*
 !/data/raw

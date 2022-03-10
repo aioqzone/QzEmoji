@@ -12,15 +12,15 @@ from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
 
-class EmojiOrm(Base):    # type: ignore
-    __tablename__ = 'Emoji'
+class EmojiOrm(Base):  # type: ignore
+    __tablename__ = "Emoji"
 
     eid = sa.Column(sa.Integer, primary_key=True)
     text = sa.Column(sa.VARCHAR)
 
 
-class MyEmoji(Base):    # type: ignore
-    __tablename__ = 'MyEmoji'
+class MyEmoji(Base):  # type: ignore
+    __tablename__ = "MyEmoji"
 
     eid = sa.Column(sa.Integer, primary_key=True)
     text = sa.Column(sa.VARCHAR)
@@ -29,10 +29,13 @@ class MyEmoji(Base):    # type: ignore
 class AsyncEnginew:
     @classmethod
     def sqlite3(cls, path: Optional[Path], **kwds):
-        if path is None: url = "sqlite+aiosqlite://"
-        else: url = "sqlite+aiosqlite:///" + path.as_posix()
+        if path is None:
+            url = "sqlite+aiosqlite://"
+        else:
+            url = "sqlite+aiosqlite:///" + path.as_posix()
         # make dir if parent not exist
-        if path: path.parent.mkdir(parents=True, exist_ok=True)
+        if path:
+            path.parent.mkdir(parents=True, exist_ok=True)
         engine = create_async_engine(url, **kwds)
         return cls(engine)
 
@@ -58,15 +61,19 @@ class EmojiTable:
         """
 
         async with self.engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)   # type: ignore
+            await conn.run_sync(Base.metadata.create_all)  # type: ignore
 
     async def is_corrupt(self) -> bool:
-        async with self.engine.begin() as conn:
-            return not await conn.run_sync(
-                lambda c: (insp := sa.inspect(c)).has_table('Emoji') and insp.has_table('MyEmoji')
-            )
+        def test2(conn):
+            insp = sa.inspect(conn)
+            return insp.has_table("Emoji") and insp.has_table("MyEmoji")
 
-    async def query(self, eid: int, default: Union[Callable[[int], str], str] = None) -> str:
+        async with self.engine.begin() as conn:
+            return not await conn.run_sync(test2)
+
+    async def query(
+        self, eid: int, default: Optional[Union[Callable[[int], str], str]] = None
+    ) -> str:
         """
         The query function takes an emoji ID and returns the corresponding string.
         If no emoji is found, it will return string identified by `default`.
@@ -79,14 +86,18 @@ class EmojiTable:
         stmt = select(MyEmoji).where(MyEmoji.eid == eid)
         async with self.sess() as sess:
             result = await sess.execute(stmt)
-            r: Optional[MyEmoji] = result.scalar()
-            if r: return cast(str, r.text)
+            r1: Optional[MyEmoji] = result.scalar()
+            if r1:
+                return cast(str, r1.text)
             stmt = select(EmojiOrm).where(EmojiOrm.eid == eid)
             result = await sess.execute(stmt)
-        r: Optional[EmojiOrm] = result.scalar()
-        if r: return cast(str, r.text)
-        if default is None: return str(eid)
-        if callable(default): return default(eid)
+        r2: Optional[EmojiOrm] = result.scalar()
+        if r2:
+            return cast(str, r2.text)
+        if default is None:
+            return str(eid)
+        if callable(default):
+            return default(eid)
         return default
 
     async def set(self, eid: int, text: str):
@@ -104,7 +115,8 @@ class EmojiTable:
         async with self.sess() as sess:
             async with sess.begin():
                 result = await sess.execute(select(MyEmoji).where(MyEmoji.eid == eid))
-                if (prev := result.scalar()):
+                prev = result.scalar()
+                if prev:
                     # if exist: update
                     prev.text = text
                 else:
@@ -126,8 +138,9 @@ class EmojiTable:
         async with self.engine.begin() as conn:
             # drop if exists, and create again
             await conn.run_sync(
-                lambda c: sa.inspect(c).has_table(EmojiOrm.__tablename__) and EmojiOrm.__table__.
-                drop(c) or EmojiOrm.metadata.create_all(c)
+                lambda c: sa.inspect(c).has_table(EmojiOrm.__tablename__)
+                and EmojiOrm.__table__.drop(c)
+                or EmojiOrm.metadata.create_all(c)
             )
         async with self.sess() as os, os.begin():
             async with sess() as ns:
