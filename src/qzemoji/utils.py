@@ -36,7 +36,7 @@ def resolve(*, url: Optional[ParseResult] = None, tag: Optional[str] = None):
     else:
         assert url
         name = Path(url.path).stem
-        if name.endswith("e"):
+        if name.startswith("e"):
             # py39- has no removeprefix
             name = name[1:]
     return int(name)
