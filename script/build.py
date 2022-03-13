@@ -5,9 +5,7 @@ from typing import Dict
 
 import yaml
 
-from qzemoji.orm import AsyncEnginew
-from qzemoji.orm import EmojiOrm
-from qzemoji.orm import EmojiTable
+from qzemoji.orm import AsyncEnginew, EmojiOrm, EmojiTable
 
 RAW_ROOT = Path("data/raw")
 DB_PATH = Path("data/emoji.db")

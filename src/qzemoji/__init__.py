@@ -13,8 +13,7 @@ import logging
 from typing import Optional
 
 from .finddb import FindDB
-from .orm import AsyncEnginew
-from .orm import EmojiTable
+from .orm import AsyncEnginew, EmojiTable
 from .utils import resolve
 
 proxy: Optional[str] = None

@@ -2,15 +2,19 @@
 __pycache__
 /.vscode
 .env
-.venv
 poetry.lock
+
+# venv
+.venv
+/venv
+.tox
 
 # temporary files
 /tmp
 /test.*
 /log
 
-# build
+# build, metadata and distribution
 /build
 /dist
 *.egg-info
