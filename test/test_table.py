@@ -1,4 +1,3 @@
-import asyncio
 from urllib.parse import urlparse
 
 import pytest
@@ -42,8 +41,3 @@ async def test_miss():
 async def test_set():
     await qe.set(3, "阿巴阿巴")
     assert await qe.query(3) == "阿巴阿巴"
-
-
-async def test_async():
-    ans = await asyncio.gather(*(qe.query(i) for i in range(100, 200)))
-    assert len(ans) == 100

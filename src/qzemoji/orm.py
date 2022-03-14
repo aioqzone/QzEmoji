@@ -50,7 +50,12 @@ class AsyncEnginew:
 class EmojiTable:
     def __init__(self, engine: AsyncEngine) -> None:
         self.engine = engine
-        self.sess = sessionmaker(engine, class_=AsyncSession)
+        self._sess = sessionmaker(engine, class_=AsyncSession)
+
+    @property
+    def sess(self):
+        self.__ensure_async_mutex()
+        return self._sess
 
     async def create(self):
         """
@@ -60,6 +65,16 @@ class EmojiTable:
 
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)  # type: ignore
+
+    def __ensure_async_mutex(self):
+        """A temp fix to self.engine.pool.dispatch.connect._exec_once_mutex blocked"""
+        from _thread import LockType
+
+        try:
+            if isinstance(self.engine.pool.dispatch.connect._exec_once_mutex, LockType):
+                self.engine.pool.dispatch.connect._set_asyncio()
+        except AttributeError:
+            return
 
     async def is_corrupt(self) -> bool:
         def test2(conn):
