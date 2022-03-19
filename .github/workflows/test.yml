@@ -39,7 +39,7 @@ jobs:
       # install your root project, if required
       #----------------------------------------------
       - name: Install library
-        run: poetry install --no-interaction -E build
+        run: poetry install --no-interaction --no-dev
       #----------------------------------------------
       #    add matrix specifics and run test suite
       #----------------------------------------------
@@ -52,7 +52,7 @@ jobs:
       - name: Build database and wheel
         if: "matrix.python-version == '3.7'"
         run: |
-          python script/build.py
+          poetry run python script/build.py
           poetry build
 
       - name: Draft a release

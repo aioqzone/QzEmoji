@@ -21,4 +21,4 @@ poetry.lock
 
 # data
 /data/*
-!/data/raw
+!/data/emoji.yml

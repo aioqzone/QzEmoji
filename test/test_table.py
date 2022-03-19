@@ -15,16 +15,15 @@ async def test_resolve():
 
 
 async def test_autoUpdate():
-    await qe.init()
+    await qe.auto_update()
     assert qe.enable_auto_update == False
 
 
 async def test_update():
     await qe.FindDB.download()
     async with qe.orm.AsyncEnginew.sqlite3(qe.FindDB.download_to, echo=True) as engine:
-        tbl = await qe._table().__anext__()
-        await tbl.update(engine)
-        assert await tbl.query(100) != "100"
+        await qe.update(engine)
+        assert await qe.query(100) != "100"
 
 
 async def test_hit():
@@ -41,3 +40,7 @@ async def test_miss():
 async def test_set():
     await qe.set(3, "阿巴阿巴")
     assert await qe.query(3) == "阿巴阿巴"
+
+
+async def test_export():
+    await qe.export()

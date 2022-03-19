@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from typing import Callable, Optional, Union, cast
 
@@ -161,3 +162,30 @@ class EmojiTable:
             # TODO: waiting for improvement
             os.add_all([EmojiOrm(eid=i.eid, text=i.text) for i in objs])
             await os.commit()
+
+    async def export(self, path: Optional[Path] = None, full: bool = True):
+        """Export emoji table to a yaml file. User may start a PR with this file.
+
+        :param full: If data in `Emoji` table should be export. Keep this value as True if you'd like to submit a PR.
+        :param path: Where to export, default as `data/emoji.yml`
+        :return: export path
+        """
+        import yaml
+
+        stmp = select(MyEmoji)
+        stmg = select(EmojiOrm)
+        async with self.sess() as sess:
+            sess: AsyncSession
+            if full:
+                rp, rg = await asyncio.gather(sess.execute(stmp), sess.execute(stmg))
+                rp, rg = rp.scalars(), rg.scalars()
+            else:
+                rp = (await sess.execute(stmp)).scalars()
+                rg = []  # just suppress warning
+
+        d = {o.eid: o.text for o in rg} if full else {}
+        d.update({o.eid: o.text for o in rp})
+        p = path or Path("data/emoji.yml")
+        with open(p, "w", encoding="utf8") as f:
+            yaml.dump(d, f, sort_keys=True, allow_unicode=True)
+        return p

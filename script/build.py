@@ -7,36 +7,32 @@ import yaml
 
 from qzemoji.orm import AsyncEnginew, EmojiOrm, EmojiTable
 
-RAW_ROOT = Path("data/raw")
 DB_PATH = Path("data/emoji.db")
-YML_EXT = [".yml", ".yaml"]
 
 
-def prepare():
+def prepare(source: Path):
     # exist_ok added in 3.5, god
-    RAW_ROOT.mkdir(parents=True, exist_ok=True)
+    if not source.exists():
+        raise FileNotFoundError(source)
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     if DB_PATH.exists():
         # missing_ok added in 3.8, so test manually
         DB_PATH.unlink()
 
 
-def item_stream():
-    for p in RAW_ROOT.iterdir():
-        if not p.suffix in YML_EXT:
-            continue
-        with open(p, encoding="utf8") as f:
-            d: Dict[int, str] = yaml.safe_load(f)
-        yield from d.items()
+def item_stream(p: Path):
+    with open(p, encoding="utf8") as f:
+        d: Dict[int, str] = yaml.safe_load(f)
+    yield from d.items()
 
 
-async def dump_items():
+async def dump_items(source: Path):
     async with AsyncEnginew.sqlite3(DB_PATH) as engine:
         tbl = EmojiTable(engine)
         await tbl.create()
         async with tbl.sess() as sess:
             async with sess.begin():
-                for eid, text in item_stream():
+                for eid, text in item_stream(source):
                     if not text:
                         print(f"{eid} null value. Skipped.")
                         continue
@@ -47,7 +43,8 @@ async def dump_items():
 if __name__ == "__main__":
     psr = argparse.ArgumentParser()
     psr.add_argument("-D", "--debug", help="asyncio debug mode", action="store_true")
+    psr.add_argument("-f", "--file", help="source file", default="data/emoji.yml", type=Path)
     arg = psr.parse_args()
 
-    prepare()
-    asyncio.run(dump_items(), debug=arg.debug)
+    prepare(arg.file)
+    asyncio.run(dump_items(arg.file), debug=arg.debug)

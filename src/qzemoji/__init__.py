@@ -9,8 +9,11 @@
 '🐷'
 """
 
+import asyncio
 import logging
-from typing import Optional
+from typing import Callable, Optional, Union
+
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from .finddb import FindDB
 from .orm import AsyncEnginew, EmojiTable
@@ -18,29 +21,20 @@ from .utils import resolve
 
 proxy: Optional[str] = None
 enable_auto_update = True
-query = set = None
-__version__ = "2.1.1a1"
+__version__ = "2.2.0.dev0"
 
-__all__ = ["auto_update", "init", "resolve", "query", "proxy", "enable_auto_update"]
-
-
-async def _table():
-    async with AsyncEnginew.sqlite3(await FindDB.find()) as engine:
-        tbl = EmojiTable(engine)
-        await tbl.create()
-        assert not await tbl.is_corrupt()
-        while True:
-            yield tbl
+__all__ = ["auto_update", "resolve", "query", "set", "update", "export"]
 
 
-async def _makefuncs():
-    global query, set
-    if query and set:
-        return
-    async for tbl in _table():
-        query = tbl.query
-        set = tbl.set
-        return
+__singleton__: EmojiTable
+
+
+async def __init__():
+    """Init a singleton: a :class:`EmojiTable` instance."""
+    if not "__singleton__" in globals():
+        global __singleton__
+        __singleton__ = EmojiTable(AsyncEnginew.sqlite3(await FindDB.find()).engine)
+        await auto_update()
 
 
 async def auto_update():
@@ -59,11 +53,23 @@ async def auto_update():
         assert FindDB.download_to.exists()
 
         async with AsyncEnginew.sqlite3(FindDB.download_to) as engine:
-            async for tbl in _table():
-                await tbl.update(engine)
-                return
+            return await __singleton__.update(engine)
 
 
-async def init():
-    await auto_update()
-    await _makefuncs()
+async def query(eid: int, default: Optional[Union[Callable[[int], str], str]] = None) -> str:
+    return await __singleton__.query(eid, default=default)
+
+
+async def set(eid: int, text: str):
+    return await __singleton__.set(eid, text)
+
+
+async def update(engine: AsyncEngine):
+    return await __singleton__.update(engine)
+
+
+async def export():
+    return await __singleton__.export()
+
+
+asyncio.run(__init__())
