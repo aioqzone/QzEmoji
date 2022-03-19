@@ -21,7 +21,7 @@ from .utils import resolve
 
 proxy: Optional[str] = None
 enable_auto_update = True
-__version__ = "2.2.0.dev0"
+__version__ = "2.2.0.dev1"
 
 __all__ = ["auto_update", "resolve", "query", "set", "update", "export"]
 

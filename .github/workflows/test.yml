@@ -39,7 +39,7 @@ jobs:
       # install your root project, if required
       #----------------------------------------------
       - name: Install library
-        run: poetry install --no-interaction --no-dev
+        run: poetry install --no-interaction
       #----------------------------------------------
       #    add matrix specifics and run test suite
       #----------------------------------------------

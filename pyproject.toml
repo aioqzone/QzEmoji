@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "qzemoji"
-version = "2.2.0.dev0"
+version = "2.2.0.dev1"
 description = "Translate Qzone emoji link to text."
 authors = ["JamzumSum <zzzzss990315@gmail.com>"]
 license = "MIT"
