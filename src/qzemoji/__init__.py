@@ -1,9 +1,8 @@
 """
->>> from urllib.parse import urlparse
 >>> import qzemoji as qe
 >>> qe.proxy = "http://localhost:1234"
 >>> await qe.init()     # will auto update database, so set a proxy if needed.
->>> qe.resolve(url=urlparse('http://qzonestyle.gtimg.cn/qzone/em/e400343.gif'))
+>>> qe.resolve(url='http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
 400343
 >>> await qe.query(400343)
 '🐷'

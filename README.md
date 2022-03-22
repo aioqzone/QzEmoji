@@ -19,8 +19,7 @@ Qzone似乎并没有提供表情序号到中文名称的接口. 通过爬虫和�
 
 ``` python
 >>> import qzemoji as qe
->>> from urllib.parse import urlparse
->>> qe.resolve(url=urlparse('http://qzonestyle.gtimg.cn/qzone/em/e400343.gif'))
+>>> qe.resolve(url='http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
 400343
 >>> qe.resolve(tag='[em]e400343[/em]')
 400343

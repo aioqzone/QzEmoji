@@ -1,5 +1,3 @@
-from urllib.parse import urlparse
-
 import pytest
 
 import qzemoji as qe
@@ -8,7 +6,7 @@ pytestmark = pytest.mark.asyncio
 
 
 async def test_resolve():
-    assert 400343 == qe.resolve(url=urlparse("http://qzonestyle.gtimg.cn/qzone/em/e400343.gif"))
+    assert 400343 == qe.resolve(url="http://qzonestyle.gtimg.cn/qzone/em/e400343.gif")
     assert 400343 == qe.resolve(tag="[em]e400343[/em]")
     pytest.raises(AssertionError, qe.resolve, url="", tag="")
     pytest.raises(ValueError, qe.resolve, tag="[em] e400343[/em]")

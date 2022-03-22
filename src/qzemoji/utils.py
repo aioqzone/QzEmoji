@@ -1,10 +1,11 @@
 import re
 from pathlib import Path
-from typing import Optional
-from urllib.parse import ParseResult
+from typing import Optional, Union
+
+from yarl import URL
 
 
-def resolve(*, url: Optional[ParseResult] = None, tag: Optional[str] = None):
+def resolve(*, url: Optional[Union[str, URL]] = None, tag: Optional[str] = None):
     """
     The resolve function takes either a URL or a tag as an argument, and returns the emoji ID.
 
@@ -17,8 +18,7 @@ def resolve(*, url: Optional[ParseResult] = None, tag: Optional[str] = None):
     :raises ValueError: if tag doesn't match the pattern.
     :return: emoji ID.
 
-    >>> from urllib.parse import urlparse
-    >>> resolve(url=urlparse('http://qzonestyle.gtimg.cn/qzone/em/e400343.gif'))
+    >>> resolve(url='http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
     400343
     >>> resolve(tag='[em]e400343[/em]')
     400343
@@ -35,6 +35,8 @@ def resolve(*, url: Optional[ParseResult] = None, tag: Optional[str] = None):
         name: str = m.group(1)
     else:
         assert url
+        if isinstance(url, str):
+            url = URL(url)
         name = Path(url.path).stem
         if name.startswith("e"):
             # py39- has no removeprefix
