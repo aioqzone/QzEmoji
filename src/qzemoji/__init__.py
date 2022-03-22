@@ -34,6 +34,8 @@ async def __init__():
     if not "__singleton__" in globals():
         global __singleton__
         __singleton__ = EmojiTable(AsyncEnginew.sqlite3(await FindDB.find()).engine)
+        await __singleton__.create()
+        assert not await __singleton__.is_corrupt()
         await auto_update()
 
 

@@ -38,9 +38,13 @@ async def test_miss():
 
 
 async def test_set():
-    await qe.set(3, "阿巴阿巴")
-    assert await qe.query(3) == "阿巴阿巴"
+    tmp = await qe.query(100)
+    await qe.set(100, "阿巴阿巴")
+    assert await qe.query(100) == "阿巴阿巴"
+    await qe.set(100, tmp)
+    assert await qe.query(100) == tmp
 
 
 async def test_export():
-    await qe.export()
+    p = await qe.export()
+    assert p.exists()
