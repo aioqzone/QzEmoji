@@ -85,16 +85,14 @@ class EmojiTable:
         async with self.engine.begin() as conn:
             return not await conn.run_sync(test2)
 
-    async def query(
-        self, eid: int, default: Optional[Union[Callable[[int], str], str]] = None
-    ) -> str:
+    async def query(self, eid: int) -> Optional[str]:
         """
         The query function takes an emoji ID and returns the corresponding string.
         If no emoji is found, it will return string identified by `default`.
 
         :param eid: Used to identify the emoji.
         :param default: Used to specify a default value, defaults to return str(eid).
-        :return: a string representation of the emoji.
+        :return: a string representation of the emoji, or None if not found.
         """
 
         stmt = select(MyEmoji).where(MyEmoji.eid == eid)
@@ -108,11 +106,6 @@ class EmojiTable:
         r2: Optional[EmojiOrm] = result.scalar()
         if r2:
             return cast(str, r2.text)
-        if default is None:
-            return str(eid)
-        if callable(default):
-            return default(eid)
-        return default
 
     async def set(self, eid: int, text: str):
         """

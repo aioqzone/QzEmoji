@@ -10,7 +10,7 @@
 
 import asyncio
 import logging
-from typing import Callable, Optional, Union
+from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncEngine
 
@@ -22,7 +22,7 @@ proxy: Optional[str] = None
 enable_auto_update = True
 __version__ = "2.2.0.dev1"
 
-__all__ = ["auto_update", "resolve", "query", "set", "update", "export"]
+__all__ = ["auto_update", "resolve", "query", "set", "export"]
 
 
 __singleton__: EmojiTable
@@ -35,7 +35,6 @@ async def __init__():
         __singleton__ = EmojiTable(AsyncEnginew.sqlite3(await FindDB.find()).engine)
         await __singleton__.create()
         assert not await __singleton__.is_corrupt()
-        await auto_update()
 
 
 async def auto_update():
@@ -57,19 +56,18 @@ async def auto_update():
             return await __singleton__.update(engine)
 
 
-async def query(eid: int, default: Optional[Union[Callable[[int], str], str]] = None) -> str:
-    return await __singleton__.query(eid, default=default)
+async def query(eid: int) -> Optional[str]:
+    await auto_update()
+    return await __singleton__.query(eid)
 
 
 async def set(eid: int, text: str):
+    await auto_update()
     return await __singleton__.set(eid, text)
 
 
-async def update(engine: AsyncEngine):
-    return await __singleton__.update(engine)
-
-
 async def export():
+    await auto_update()
     return await __singleton__.export()
 
 

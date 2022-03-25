@@ -20,7 +20,7 @@ async def test_autoUpdate():
 async def test_update():
     await qe.FindDB.download()
     async with qe.orm.AsyncEnginew.sqlite3(qe.FindDB.download_to, echo=True) as engine:
-        await qe.update(engine)
+        await qe.__singleton__.update(engine)
         assert await qe.query(100) != "100"
 
 
@@ -30,13 +30,13 @@ async def test_hit():
 
 
 async def test_miss():
-    assert await qe.query(0) == "0"
-    assert await qe.query(1, "2") == "2"
-    assert await qe.query(2, lambda i: f"e{i}") == "e2"
+    assert await qe.query(100)
+    assert await qe.query(1) is None
 
 
 async def test_set():
     tmp = await qe.query(100)
+    assert tmp
     await qe.set(100, "阿巴阿巴")
     assert await qe.query(100) == "阿巴阿巴"
     await qe.set(100, tmp)
