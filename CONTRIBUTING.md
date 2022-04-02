@@ -1,7 +1,7 @@
 ## Contribute
 
-[![](https://img.shields.io/github/forks/JamzumSum/QzEmoji?style=social&label=opening%20fork)](https://github.com/JamzumSum/QzEmoji/pulls)
-[![rules](https://img.shields.io/tokei/lines/github/JamzumSum/QzEmoji?label=rules)](CONTRIBUTING.md)
+[![](https://img.shields.io/github/forks/aioqzone/QzEmoji?style=social&label=opening%20fork)](https://github.com/aioqzone/QzEmoji/pulls)
+[![rules](https://img.shields.io/tokei/lines/github/aioqzone/QzEmoji?label=rules)](CONTRIBUTING.md)
 
 ### 提交PR
 

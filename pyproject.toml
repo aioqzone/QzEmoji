@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "qzemoji"
-version = "2.2.2a0"
+version = "2.2.2a0.post1"
 description = "Translate Qzone emoji link to text."
-authors = ["JamzumSum <zzzzss990315@gmail.com>"]
+authors = ["aioqzone <zzzzss990315@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/JamzumSum/QzEmoji"
-repository = "https://github.com/JamzumSum/QzEmoji"
+homepage = "https://github.com/aioqzone/QzEmoji"
+repository = "https://github.com/aioqzone/QzEmoji"
 
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"
@@ -31,7 +31,10 @@ dev = [
     "black",
     "isort"
 ]
-
+[[tool.poetry.source]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

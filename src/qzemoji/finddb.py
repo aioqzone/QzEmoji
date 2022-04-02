@@ -7,7 +7,7 @@ from updater.download import adownload
 from updater.utils import get_latest_asset
 from updater.version import parse
 
-REPO = gh.Repo("JamzumSum", "QzEmoji")
+REPO = gh.Repo("aioqzone", "QzEmoji")
 
 
 class FindDB:

@@ -3,8 +3,8 @@
 将Qzone表情链接转换为文字.
 
 [![python](https://img.shields.io/badge/python-3.7%20%7C%203.10-blue)][homepage]
-[![Test](https://github.com/JamzumSum/QzEmoji/actions/workflows/test.yml/badge.svg?branch=async)](https://github.com/JamzumSum/QzEmoji/blob/async/.github/workflows/test.yml)
-[![rules](https://img.shields.io/tokei/lines/github/JamzumSum/QzEmoji?label=rules)](CONTRIBUTING.md)
+[![Test](https://github.com/aioqzone/QzEmoji/actions/workflows/test.yml/badge.svg?branch=async)](https://github.com/aioqzone/QzEmoji/blob/async/.github/workflows/test.yml)
+[![rules](https://img.shields.io/tokei/lines/github/aioqzone/QzEmoji?label=rules)](CONTRIBUTING.md)
 [![black](https://img.shields.io/badge/code%20style-black-000000)](https://github.com/psf/black)
 
 This project is a component of [Qzone3TG][qzone2tg].
@@ -75,7 +75,7 @@ Path('data/emoji.yml')  # default export to data/emoji.yml
 
 ### Query in SQL
 
-下载[emoji.db](https://github.com/JamzumSum/QzEmoji/releases).
+下载[emoji.db](https://github.com/aioqzone/QzEmoji/releases).
 
 使用`sqlite`查询`emoji`表:
 
@@ -103,10 +103,10 @@ See [CONTRIBUTING](CONTRIBUTING.md)
 
 ## License
 
-- [MIT](https://github.com/JamzumSum/QzEmoji/blob/async/LICENSE)
+- [MIT](https://github.com/aioqzone/QzEmoji/blob/async/LICENSE)
 
 
-[qzone2tg]: https://github.com/JamzumSum/Qzone2TG "Forward Qzone feeds to telegram"
-[principle]: https://github.com/JamzumSum/QzEmoji/discussions/2 "欢迎分享!"
-[updater]: https://github.com/JamzumSum/AssetsUpdater "Update assets from network"
-[homepage]: https://github.com/JamzumSum/QzEmoji "Translate Qzone Emoji link to text."
+[qzone2tg]: https://github.com/aioqzone/Qzone2TG "Forward Qzone feeds to telegram"
+[principle]: https://github.com/aioqzone/QzEmoji/discussions/2 "欢迎分享!"
+[updater]: https://github.com/aioqzone/AssetsUpdater "Update assets from network"
+[homepage]: https://github.com/aioqzone/QzEmoji "Translate Qzone Emoji link to text."
