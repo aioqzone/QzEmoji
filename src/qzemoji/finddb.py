@@ -2,12 +2,12 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
+from aiohttp import ClientSession
+from aiohttp.typedefs import StrOrURL
 from updater import github as gh
-from updater.download import adownload
+from updater.download import download
 from updater.utils import get_latest_asset
 from updater.version import parse
-
-REPO = gh.Repo("aioqzone", "QzEmoji")
 
 
 class FindDB:
@@ -17,7 +17,9 @@ class FindDB:
     my_db = Path("data/myemoji.db")
 
     @classmethod
-    async def download(cls, proxy: Optional[str] = None, current_version: Optional[str] = None):
+    async def download(
+        cls, proxy: Optional[StrOrURL] = None, current_version: Optional[str] = None
+    ):
         """
         The download function downloads the latest version of the emoji database from GitHub.
         If there is no newer version, it does nothing.
@@ -27,14 +29,16 @@ class FindDB:
         :return: if downloaded.
         """
 
-        if proxy:
-            gh.register_proxy(proxy)
-        up = gh.GhUpdater(REPO)
-        a = get_latest_asset(up, "emoji.db", pre=True)
+        async with ClientSession() as sess:
+            up = gh.GhUpdater(sess, "aioqzone", "QzEmoji")
+            if proxy:
+                up.proxy = proxy
+            a = await get_latest_asset(up, "emoji.db", pre=True)
+
         if current_version and parse(a.from_tag) <= parse(current_version):
             return False
 
-        await adownload(a.download_url, cls.download_to, proxy=proxy)
+        await download(a.download_url, cls.download_to, proxy=proxy)
         return True
 
     @classmethod

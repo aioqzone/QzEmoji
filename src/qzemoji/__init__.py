@@ -12,8 +12,6 @@ import asyncio
 import logging
 from typing import Optional
 
-from sqlalchemy.ext.asyncio import AsyncEngine
-
 from .finddb import FindDB
 from .orm import AsyncEnginew, EmojiTable
 from .utils import resolve
