@@ -1,8 +1,8 @@
 # config and cache
 __pycache__
 /.vscode
-.env
-poetry.lock
+*.env
+poetry.toml
 
 # venv
 .venv
