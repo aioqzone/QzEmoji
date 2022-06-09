@@ -1,36 +1,30 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Dev CI
+name: Build
 
 on:
-  workflow_call:
-    inputs:
-      PYTEST_ARGS:
-        type: string
-        required: true
-    outputs:
-      package-version:
-        description: version of this python package output by poetry
-        value: ${{ jobs.install-test.outputs.package-version }}
+  pull_request:
+    types:
+      - closed
+    branches:
+      - beta
+      - beta/**
+      - release
+      - release/**
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.7"]
-
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
       #----------------------------------------------
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
-      - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+      - uses: actions/setup-python@v3
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
       #----------------------------------------------
       #  -----  install & configure poetry  -----
       #----------------------------------------------
@@ -39,9 +33,6 @@ jobs:
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
-      - name: Get Package Version
-        id: version_step
-        run: echo "::set-output name=package::$(poetry version -s)"
       #----------------------------------------------
       #       load cached venv if cache exists
       #----------------------------------------------
@@ -55,10 +46,20 @@ jobs:
       # install your root project, if required
       #----------------------------------------------
       - name: Install library
-        run: poetry install --no-interaction -vv
+        run: poetry install --no-interaction
       #----------------------------------------------
-      #    add matrix specifics and run test suite
+      #  build package and database, draft a release
       #----------------------------------------------
-      - name: Test with pytest
+      - name: Build database and wheel
         run: |
-          poetry run pytest ${{ inputs.PYTEST_ARGS }}
+          poetry run python script/build.py
+          poetry build
+
+      - name: Draft a release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*
+            data/emoji.db
+          # body: ${{ github.event.head_commit.message }} # only push event has head_commit
+          draft: true

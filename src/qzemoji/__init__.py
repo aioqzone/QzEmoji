@@ -10,27 +10,33 @@
 
 import asyncio
 import logging
-from typing import Optional
+from functools import wraps
+from typing import Any, Awaitable, Callable, Coroutine, Optional, TypeVar
 
+from typing_extensions import ParamSpec
+
+from .base import AsyncEngineFactory
 from .finddb import FindDB
-from .orm import AsyncEnginew, EmojiTable
+from .orm import EmojiTable
 from .utils import resolve
-
-proxy: Optional[str] = None
-enable_auto_update = True
-__version__ = "2.2.0.dev1"
 
 __all__ = ["auto_update", "resolve", "query", "set", "export"]
 
 
-__singleton__: EmojiTable
+proxy: Optional[str] = None
+enable_auto_update = True
+__version__ = "3.1.1.dev1"
+__singleton__: EmojiTable = None  # type: ignore
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 
-async def __init__():
+async def __single__():
     """Init a singleton: a :class:`EmojiTable` instance."""
-    if not "__singleton__" in globals():
-        global __singleton__
-        __singleton__ = EmojiTable(AsyncEnginew.sqlite3(await FindDB.find()).engine)
+    global __singleton__
+    if __singleton__ is None:
+        __singleton__ = EmojiTable(AsyncEngineFactory.sqlite3(await FindDB.find()).engine)
         await __singleton__.create()
         assert not await __singleton__.is_corrupt()
 
@@ -50,23 +56,20 @@ async def auto_update():
             return
         assert FindDB.download_to.exists()
 
-        async with AsyncEnginew.sqlite3(FindDB.download_to) as engine:
+        async with AsyncEngineFactory.sqlite3(FindDB.download_to) as engine:
             return await __singleton__.update(engine)
 
 
-async def query(eid: int) -> Optional[str]:
-    await auto_update()
-    return await __singleton__.query(eid)
+def auto_update_decorator(func: Callable[P, Awaitable[T]]) -> Callable[P, Coroutine[Any, Any, T]]:
+    @wraps(func)
+    async def auto_update_wrapper(*args: P.args, **kwds: P.kwargs):
+        await auto_update()
+        return await func(*args, **kwds)
+
+    return auto_update_wrapper
 
 
-async def set(eid: int, text: str):
-    await auto_update()
-    return await __singleton__.set(eid, text)
-
-
-async def export():
-    await auto_update()
-    return await __singleton__.export()
-
-
-asyncio.run(__init__())
+asyncio.run(__single__())
+query = auto_update_decorator(__singleton__.query)
+set = auto_update_decorator(__singleton__.set)
+export = auto_update_decorator(__singleton__.export)

@@ -1,0 +1,32 @@
+name: Dev CI
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - "test/**"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/test.yml"
+      - "poetry.lock"
+    branches:
+      - dev
+      - dev/**
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    with:
+      pytest_arg: test
+
+  merge:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create Pull Request
+        uses: repo-sync/pull-request@v2
+        with:
+          destination_branch: beta
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pr_title: ${{ needs.test.outputs.package-version }}
+          pr_body: ${{ github.event.head_commit.message }} # only push event has head_commit

@@ -1,6 +1,11 @@
+from pathlib import Path
+
 import pytest
 
 import qzemoji as qe
+from qzemoji.base import AsyncEngineFactory
+from qzemoji.finddb import FindDB
+from qzemoji.orm import EmojiTable
 
 pytestmark = pytest.mark.asyncio
 
@@ -18,10 +23,13 @@ async def test_autoUpdate():
 
 
 async def test_update():
-    await qe.FindDB.download()
-    async with qe.orm.AsyncEnginew.sqlite3(qe.FindDB.download_to, echo=True) as engine:
-        await qe.__singleton__.update(engine)
-        assert await qe.query(100) != "100"
+    await FindDB.download()
+    async with AsyncEngineFactory.sqlite3(
+        FindDB.download_to, echo=True
+    ) as local, AsyncEngineFactory.sqlite3(None) as mem:
+        mem_table = EmojiTable(mem)
+        await mem_table.update(local)
+        assert await mem_table.query(100) != "100"
 
 
 async def test_hit():
@@ -44,5 +52,5 @@ async def test_set():
 
 
 async def test_export():
-    p = await qe.export()
+    p = await qe.export(Path("tmp/emoji.yml"))
     assert p.exists()
