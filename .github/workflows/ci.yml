@@ -16,7 +16,7 @@ jobs:
   test:
     uses: ./.github/workflows/test.yml
     with:
-      pytest_arg: test
+      PYTEST_ARGS: test
 
   merge:
     needs: test
