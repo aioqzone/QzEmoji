@@ -5,7 +5,8 @@ from typing import Dict
 
 import yaml
 
-from qzemoji.orm import AsyncEnginew, EmojiOrm, EmojiTable
+from qzemoji.base import AsyncEngineFactory
+from qzemoji.orm import EmojiOrm, EmojiTable
 
 DB_PATH = Path("data/emoji.db")
 
@@ -27,7 +28,7 @@ def item_stream(p: Path):
 
 
 async def dump_items(source: Path):
-    async with AsyncEnginew.sqlite3(DB_PATH) as engine:
+    async with AsyncEngineFactory.sqlite3(DB_PATH) as engine:
         tbl = EmojiTable(engine)
         await tbl.create()
         async with tbl.sess() as sess:
