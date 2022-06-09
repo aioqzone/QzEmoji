@@ -15,11 +15,14 @@ on:
         value: ${{ jobs.install-test.outputs.package-version }}
 
 jobs:
-  test:
+  install-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.10", "3.7"]
+
+    outputs:
+      package-version: ${{ steps.version_step.outputs.package }}
 
     steps:
       #----------------------------------------------
@@ -28,9 +31,10 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+          cache: poetry
       #----------------------------------------------
       #  -----  install & configure poetry  -----
       #----------------------------------------------
@@ -43,16 +47,7 @@ jobs:
         id: version_step
         run: echo "::set-output name=package::$(poetry version -s)"
       #----------------------------------------------
-      #       load cached venv if cache exists
-      #----------------------------------------------
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
-      #----------------------------------------------
-      # install your root project, if required
+      #   install your root project, if required
       #----------------------------------------------
       - name: Install library
         run: poetry install --no-interaction -vv
