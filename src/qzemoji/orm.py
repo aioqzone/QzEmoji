@@ -1,81 +1,40 @@
 import asyncio
+from os import PathLike
 from pathlib import Path
-from typing import Callable, Optional, Union, cast
+from typing import Optional, cast
 
 import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
 
+from .base import AsyncSessionProvider
+
 Base = declarative_base()
 
 
-class EmojiOrm(Base):  # type: ignore
+class EmojiOrm(Base):
     __tablename__ = "Emoji"
 
     eid = sa.Column(sa.Integer, primary_key=True)
     text = sa.Column(sa.VARCHAR)
 
 
-class MyEmoji(Base):  # type: ignore
+class MyEmoji(Base):
     __tablename__ = "MyEmoji"
 
     eid = sa.Column(sa.Integer, primary_key=True)
     text = sa.Column(sa.VARCHAR)
 
 
-class AsyncEnginew:
-    @classmethod
-    def sqlite3(cls, path: Optional[Path], **kwds):
-        if path is None:
-            url = "sqlite+aiosqlite://"
-        else:
-            url = "sqlite+aiosqlite:///" + path.as_posix()
-        # make dir if parent not exist
-        if path:
-            path.parent.mkdir(parents=True, exist_ok=True)
-        engine = create_async_engine(url, **kwds)
-        return cls(engine)
-
-    def __init__(self, engine: AsyncEngine) -> None:
-        self.engine = engine
-
-    async def __aenter__(self):
-        return self.engine
-
-    async def __aexit__(self, *exc):
-        await self.engine.dispose()
-
-
-class EmojiTable:
-    def __init__(self, engine: AsyncEngine) -> None:
-        self.engine = engine
-        self._sess = sessionmaker(engine, class_=AsyncSession)
-
-    @property
-    def sess(self):
-        self.__ensure_async_mutex()
-        return self._sess
-
+class EmojiTable(AsyncSessionProvider):
     async def create(self):
         """
         The create function creates `Emoji` and `MyEmoji` table in the database.
         It takes no arguments and returns nothing.
         """
-
-        async with self.engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)  # type: ignore
-
-    def __ensure_async_mutex(self):
-        """A temp fix to self.engine.pool.dispatch.connect._exec_once_mutex blocked"""
-        from _thread import LockType
-
-        try:
-            if isinstance(self.engine.pool.dispatch.connect._exec_once_mutex, LockType):
-                self.engine.pool.dispatch.connect._set_asyncio()
-        except AttributeError:
-            return
+        return await self._create(Base)
 
     async def is_corrupt(self) -> bool:
         def test2(conn):
@@ -156,7 +115,7 @@ class EmojiTable:
             os.add_all([EmojiOrm(eid=i.eid, text=i.text) for i in objs])
             await os.commit()
 
-    async def export(self, path: Optional[Path] = None, full: bool = True):
+    async def export(self, path: Optional[PathLike] = None, full: bool = True):
         """Export emoji table to a yaml file. User may start a PR with this file.
 
         :param full: If data in `Emoji` table should be export. Keep this value as True if you'd like to submit a PR.
@@ -168,7 +127,6 @@ class EmojiTable:
         stmp = select(MyEmoji)
         stmg = select(EmojiOrm)
         async with self.sess() as sess:
-            sess: AsyncSession
             if full:
                 rp, rg = await asyncio.gather(sess.execute(stmp), sess.execute(stmg))
                 rp, rg = rp.scalars(), rg.scalars()
@@ -178,7 +136,12 @@ class EmojiTable:
 
         d = {o.eid: o.text for o in rg} if full else {}
         d.update({o.eid: o.text for o in rp})
+
         p = path or Path("data/emoji.yml")
+        if not isinstance(p, Path):
+            p = Path(p)
+        p.parent.mkdir(parents=True, exist_ok=True)
+
         with open(p, "w", encoding="utf8") as f:
             yaml.dump(d, f, sort_keys=True, allow_unicode=True)
         return p
