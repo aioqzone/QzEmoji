@@ -29,20 +29,13 @@ jobs:
       #       check-out repo and set-up python
       #----------------------------------------------
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Install poetry
+        run: pipx install poetry
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: poetry
-      #----------------------------------------------
-      #  -----  install & configure poetry  -----
-      #----------------------------------------------
-      - name: Install Poetry Action
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
       - name: Get Package Version
         id: version_step
         run: echo "::set-output name=package::$(poetry version -s)"
