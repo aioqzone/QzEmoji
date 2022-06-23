@@ -1,13 +1,14 @@
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
-from aiohttp import ClientSession
-from aiohttp.typedefs import StrOrURL
+from httpx import URL, AsyncClient
 from updater import github as gh
 from updater.download import download
 from updater.utils import get_latest_asset
 from updater.version import parse
+
+StrOrURL = Union[URL, str]
 
 
 class FindDB:
@@ -28,17 +29,18 @@ class FindDB:
         :param current_version: Used to check if the current version of the plugin is greater than or equal to the one on GitHub, defaults to None.
         :return: if downloaded.
         """
+        client_dict = {}
+        if proxy:
+            client_dict["proxies"] = proxy
+        async with AsyncClient(**client_dict) as client:
+            up = gh.GhUpdater(client, "aioqzone", "QzEmoji")
 
-        async with ClientSession() as sess:
-            up = gh.GhUpdater(sess, "aioqzone", "QzEmoji")
-            if proxy:
-                up.proxy = proxy
             a = await get_latest_asset(up, "emoji.db", pre=True)
 
         if current_version and parse(a.from_tag) <= parse(current_version):
             return False
 
-        await download(a.download_url, cls.download_to, proxy=proxy)
+        assert await download(a.download_url, cls.download_to), "db corrupt"
         return True
 
     @classmethod
@@ -53,6 +55,6 @@ class FindDB:
         if cls.my_db.exists():
             return cls.my_db
         await cls.download(proxy)
-        shutil.move(cls.download_to, cls.my_db)
+        shutil.move(cls.download_to.as_posix(), cls.my_db)
         assert cls.my_db.exists()
         return cls.my_db

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, cast
 
 import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
@@ -101,15 +101,19 @@ class EmojiTable(AsyncSessionProvider):
 
         sess = sessionmaker(engine, class_=AsyncSession)
         stmt = select(EmojiOrm)
+
+        def do_w_conn(c: AsyncConnection):
+            if sa.inspect(c).has_table(EmojiOrm.__tablename__):
+                EmojiOrm.__table__.drop(c)
+            EmojiOrm.metadata.create_all(c)
+
         async with self.engine.begin() as conn:
             # drop if exists, and create again
-            await conn.run_sync(
-                lambda c: sa.inspect(c).has_table(EmojiOrm.__tablename__)
-                and EmojiOrm.__table__.drop(c)
-                or EmojiOrm.metadata.create_all(c)
-            )
+            await conn.run_sync(do_w_conn)
+
         async with self.sess() as os, os.begin():
             async with sess() as ns:
+                ns: AsyncSession
                 objs = (await ns.execute(stmt)).scalars().all()
             # TODO: waiting for improvement
             os.add_all([EmojiOrm(eid=i.eid, text=i.text) for i in objs])
