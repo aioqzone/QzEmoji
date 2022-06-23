@@ -1,11 +1,12 @@
 import re
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
-from yarl import URL
+from httpx import URL
+from httpx._types import URLTypes
 
 
-def resolve(*, url: Optional[Union[str, URL]] = None, tag: Optional[str] = None):
+def resolve(*, url: Optional[URLTypes] = None, tag: Optional[str] = None):
     """
     The resolve function takes either a URL or a tag as an argument, and returns the emoji ID.
 
