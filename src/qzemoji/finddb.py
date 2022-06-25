@@ -1,14 +1,13 @@
 import shutil
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
-from httpx import URL, AsyncClient
+from httpx import AsyncClient
+from httpx._types import ProxiesTypes
 from updater import github as gh
 from updater.download import download
 from updater.utils import get_latest_asset
 from updater.version import parse
-
-StrOrURL = Union[URL, str]
 
 
 class FindDB:
@@ -18,9 +17,7 @@ class FindDB:
     my_db = Path("data/myemoji.db")
 
     @classmethod
-    async def download(
-        cls, proxy: Optional[StrOrURL] = None, current_version: Optional[str] = None
-    ):
+    async def download(cls, proxy: ProxiesTypes = ..., current_version: Optional[str] = None):
         """
         The download function downloads the latest version of the emoji database from GitHub.
         If there is no newer version, it does nothing.
@@ -30,21 +27,20 @@ class FindDB:
         :return: if downloaded.
         """
         client_dict = {}
-        if proxy:
+        if proxy != ...:
             client_dict["proxies"] = proxy
         async with AsyncClient(**client_dict) as client:
             up = gh.GhUpdater(client, "aioqzone", "QzEmoji")
-
             a = await get_latest_asset(up, "emoji.db", pre=True)
 
         if current_version and parse(a.from_tag) <= parse(current_version):
             return False
 
-        assert await download(a.download_url, cls.download_to), "db corrupt"
+        assert await download(a.download_url, cls.download_to, proxy=proxy), "db corrupt"
         return True
 
     @classmethod
-    async def find(cls, proxy: Optional[str] = None) -> Path:
+    async def find(cls, proxy: ProxiesTypes = ...) -> Path:
         """
         Find the database file or download if not exists.
 
@@ -54,7 +50,7 @@ class FindDB:
 
         if cls.my_db.exists():
             return cls.my_db
-        await cls.download(proxy)
+        await cls.download(proxy)  # leave version as None since db not exist
         shutil.move(cls.download_to.as_posix(), cls.my_db)
         assert cls.my_db.exists()
         return cls.my_db
