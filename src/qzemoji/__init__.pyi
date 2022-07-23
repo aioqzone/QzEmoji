@@ -2,11 +2,13 @@ from os import PathLike
 from pathlib import Path
 from typing import Optional
 
+from httpx._types import ProxiesTypes
+
 from .utils import resolve
 
 __all__ = ["auto_update", "resolve", "query", "set", "export"]
 
-proxy: Optional[str]
+proxy: Optional[ProxiesTypes]
 enable_auto_update: bool
 __version__: str
 

@@ -13,6 +13,7 @@ import logging
 from functools import wraps
 from typing import Any, Awaitable, Callable, Coroutine, Optional, TypeVar
 
+from httpx._types import ProxiesTypes
 from typing_extensions import ParamSpec
 
 from .base import AsyncEngineFactory
@@ -23,9 +24,9 @@ from .utils import resolve
 __all__ = ["auto_update", "resolve", "query", "set", "export"]
 
 
-proxy: Optional[str] = None
+proxy: Optional[ProxiesTypes] = None
 enable_auto_update = True
-__version__ = "3.1.1.dev1"
+__version__ = "3.3.1a1.dev1"
 __singleton__: EmojiTable = None  # type: ignore
 
 P = ParamSpec("P")
@@ -45,7 +46,10 @@ async def auto_update():
     global enable_auto_update
     if enable_auto_update:
         try:
-            downloaded = await FindDB.download(proxy, __version__)
+            if proxy:
+                downloaded = await FindDB.download(proxy, __version__)
+            else:
+                downloaded = await FindDB.download(current_version=__version__)
         except:
             logging.error("Failed to download database", exc_info=True)
             downloaded = False
