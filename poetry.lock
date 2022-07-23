@@ -50,18 +50,18 @@ httpx = "^0.23.0"
 packaging = "^21.3"
 
 [package.extras]
-dev = ["pre-commit (>=2.17.0,<3.0.0)", "black (>=22.6.0,<23.0.0)", "isort (>=5.10.1,<6.0.0)"]
-tui = ["rich (>=12.4.1,<13.0.0)"]
+dev = ["pre-commit (>=2.20.0,<3.0.0)", "black (>=22.6.0,<23.0.0)", "isort (>=5.10.1,<6.0.0)"]
+tui = ["rich (>=12.5.1,<13.0.0)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/JamzumSum/AssetsUpdater.git"
 reference = "release"
-resolved_reference = "5e62a226dbff8e1ba1d5239931e68fecdb286453"
+resolved_reference = "e72b297db77add73807b6be381daa5edbc9ecb2e"
 
 [[package]]
 name = "atomicwrites"
-version = "1.4.0"
+version = "1.4.1"
 description = "Atomic file writes."
 category = "dev"
 optional = false
@@ -142,7 +142,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "distlib"
-version = "0.3.4"
+version = "0.3.5"
 description = "Distribution utilities"
 category = "main"
 optional = true
@@ -219,7 +219,7 @@ socks = ["socksio (>=1.0.0,<2.0.0)"]
 
 [[package]]
 name = "identify"
-version = "2.5.1"
+version = "2.5.2"
 description = "File identification library for Python"
 category = "main"
 optional = true
@@ -397,7 +397,7 @@ testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.
 
 [[package]]
 name = "pytest-asyncio"
-version = "0.18.3"
+version = "0.19.0"
 description = "Pytest support for asyncio"
 category = "dev"
 optional = false
@@ -408,7 +408,7 @@ pytest = ">=6.1.0"
 typing-extensions = {version = ">=3.7.2", markers = "python_version < \"3.8\""}
 
 [package.extras]
-testing = ["coverage (==6.2)", "hypothesis (>=5.7.1)", "flaky (>=3.5.0)", "mypy (==0.931)", "pytest-trio (>=0.7.0)"]
+testing = ["coverage (>=6.2)", "hypothesis (>=5.7.1)", "flaky (>=3.5.0)", "mypy (>=0.931)", "pytest-trio (>=0.7.0)"]
 
 [[package]]
 name = "pyyaml"
@@ -498,6 +498,29 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "tox"
+version = "3.25.1"
+description = "tox is a generic virtualenv management and test command line tool"
+category = "main"
+optional = true
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+
+[package.dependencies]
+colorama = {version = ">=0.4.1", markers = "platform_system == \"Windows\""}
+filelock = ">=3.0.0"
+importlib-metadata = {version = ">=0.12", markers = "python_version < \"3.8\""}
+packaging = ">=14"
+pluggy = ">=0.12.0"
+py = ">=1.4.17"
+six = ">=1.14.0"
+toml = ">=0.9.4"
+virtualenv = ">=16.0.0,<20.0.0 || >20.0.0,<20.0.1 || >20.0.1,<20.0.2 || >20.0.2,<20.0.3 || >20.0.3,<20.0.4 || >20.0.4,<20.0.5 || >20.0.5,<20.0.6 || >20.0.6,<20.0.7 || >20.0.7"
+
+[package.extras]
+docs = ["pygments-github-lexers (>=0.0.5)", "sphinx (>=2.0.0)", "sphinxcontrib-autoprogram (>=0.1.5)", "towncrier (>=18.5.0)"]
+testing = ["flaky (>=3.4.0)", "freezegun (>=0.3.11)", "pytest (>=4.0.0)", "pytest-cov (>=2.5.1)", "pytest-mock (>=1.10.0)", "pytest-randomly (>=1.0.0)", "psutil (>=5.6.1)", "pathlib2 (>=2.3.3)"]
+
+[[package]]
 name = "typed-ast"
 version = "1.5.4"
 description = "a fork of Python 2 and 3 ast modules with type comment support"
@@ -534,15 +557,15 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 
 [[package]]
 name = "zipp"
-version = "3.8.0"
+version = "3.8.1"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
 [package.extras]
-docs = ["sphinx", "jaraco.packaging (>=9)", "rst.linker (>=1.9)"]
-testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-cov", "pytest-enabler (>=1.0.1)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy (>=0.9.1)"]
+docs = ["sphinx", "jaraco.packaging (>=9)", "rst.linker (>=1.9)", "jaraco.tidelift (>=1.4)"]
+testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-cov", "pytest-enabler (>=1.3)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy (>=0.9.1)"]
 
 [extras]
 dev = ["pre-commit", "black", "isort"]
@@ -550,7 +573,7 @@ dev = ["pre-commit", "black", "isort"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "70b3dffe6bfc994384cd7afbfe27b4b1ea981f707e536ae080c4eb8ecacf7c00"
+content-hash = "adbd49382ded2973275a3de7799220289745fe64049b0eaeb6afb58a6b13b0cd"
 
 [metadata.files]
 aiofiles = []
@@ -593,6 +616,7 @@ sniffio = []
 sqlalchemy = []
 toml = []
 tomli = []
+tox = []
 typed-ast = []
 typing-extensions = []
 virtualenv = []
