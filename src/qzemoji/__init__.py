@@ -26,7 +26,7 @@ __all__ = ["auto_update", "resolve", "query", "set", "export"]
 
 proxy: Optional[ProxiesTypes] = None
 enable_auto_update = True
-__version__ = "3.3.1a1.dev1"
+__version__ = "3.3.2"
 __singleton__: EmojiTable = None  # type: ignore
 
 P = ParamSpec("P")
