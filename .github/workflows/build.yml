@@ -31,14 +31,16 @@ jobs:
       #   install your root project, if required
       #----------------------------------------------
       - name: Install library
-        run: poetry install --no-interaction
+        run: poetry install -n -vv
       #----------------------------------------------
       #  build package and database, draft a release
       #----------------------------------------------
       - name: Build database and wheel
+        id: build
         run: |
           poetry run python script/build.py
           poetry build
+          echo "::set-output name=version::$(poetry version -s)"
 
       - name: Draft a release
         uses: softprops/action-gh-release@v1
@@ -46,5 +48,6 @@ jobs:
           files: |
             dist/*
             data/emoji.db
-          # body: ${{ github.event.head_commit.message }} # only push event has head_commit
-          draft: true
+          tag_name: ${{ steps.build.outputs.version }}
+          name: ${{ steps.build.outputs.version }}
+          generate_release_notes: true
