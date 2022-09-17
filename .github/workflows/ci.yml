@@ -30,8 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: release
-      - name: Get release SHA
+          ref: beta
+      - name: Get SHA
         id: sha
         run: echo "::set-output name=sha::$(git rev-parse --short HEAD)"
       - uses: actions/checkout@v3
