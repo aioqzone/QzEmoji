@@ -4,12 +4,14 @@ from pathlib import Path
 from typing import Optional, cast
 
 import sqlalchemy as sa
+import yaml
+from packaging.version import Version
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
 
-from .base import AsyncSessionProvider
+from .base import ASessionFactory, AsyncSessionProvider
 
 Base = declarative_base()
 
@@ -28,13 +30,22 @@ class MyEmoji(Base):
     text = sa.Column(sa.VARCHAR)
 
 
+class _Version(Base):
+    __tablename__ = "Version"
+
+    major = sa.Column(sa.Integer, primary_key=True)
+    minor = sa.Column(sa.Integer, primary_key=True)
+
+
 class EmojiTable(AsyncSessionProvider):
-    async def create(self):
+    async def create(self, conn=None):
         """
         The create function creates `Emoji` and `MyEmoji` table in the database.
         It takes no arguments and returns nothing.
+
+        :param conn: use this connection, otherwise we will create one and close it on return.
         """
-        return await self._create(Base)
+        return await self._create(Base, conn=conn)
 
     async def is_corrupt(self) -> bool:
         def test2(conn):
@@ -100,6 +111,7 @@ class EmojiTable(AsyncSessionProvider):
         """
 
         sess = sessionmaker(engine, class_=AsyncSession)
+        sess = cast(ASessionFactory, sess)
         stmt = select(EmojiOrm)
 
         def do_w_conn(c: AsyncConnection):
@@ -119,15 +131,17 @@ class EmojiTable(AsyncSessionProvider):
             os.add_all([EmojiOrm(eid=i.eid, text=i.text) for i in objs])
             await os.commit()
 
-    async def export(self, path: Optional[PathLike] = None, full: bool = True):
+    async def export(self, path: PathLike, full: bool = True) -> Path:
         """Export emoji table to a yaml file. User may start a PR with this file.
 
+        :param path: Where to export
         :param full: If data in `Emoji` table should be export. Keep this value as True if you'd like to submit a PR.
-        :param path: Where to export, default as `data/emoji.yml`
         :return: export path
-        """
-        import yaml
 
+        .. versionchanged:: 4.0.0
+
+            path is not optional
+        """
         stmp = select(MyEmoji)
         stmg = select(EmojiOrm)
         async with self.sess() as sess:
@@ -141,11 +155,64 @@ class EmojiTable(AsyncSessionProvider):
         d = {o.eid: o.text for o in rg} if full else {}
         d.update({o.eid: o.text for o in rp})
 
-        p = path or Path("data/emoji.yml")
-        if not isinstance(p, Path):
-            p = Path(p)
-        p.parent.mkdir(parents=True, exist_ok=True)
+        if not isinstance(path, Path):
+            path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(p, "w", encoding="utf8") as f:
-            yaml.dump(d, f, sort_keys=True, allow_unicode=True)
-        return p
+        with open(path, "w", encoding="utf8") as f:
+            yaml.safe_dump(d, f, sort_keys=True, allow_unicode=True)
+        return path
+
+    async def get_version(self, sess: Optional[AsyncSession] = None) -> Version:
+        """Get version of the database. The version indicates the version of the "Emoji" table.
+
+        :param: Use this session if it is not None. Otherwise we will create one and close it on return.
+        """
+        if sess is None:
+            async with self.sess() as sess:
+                return await self.get_version(sess)
+
+        z = Version("0.0")
+
+        async with self.engine.begin() as conn:
+            if not await conn.run_sync(lambda conn: sa.inspect(conn).has_table("Version")):
+                return z
+
+        stmp = select(_Version)
+        result = await sess.execute(stmp)
+        r: Optional[_Version] = result.scalar()
+
+        if r is None:
+            return z
+        return Version(f"{r.major}.{r.minor}")
+
+    async def set_version(
+        self, version: Version, sess: Optional[AsyncSession] = None, flush=True
+    ) -> None:
+        """Set version of the database. We should increase the version of the "Emoji" table before
+        we release a new database.
+
+        :param version: version to set
+        :param sess: use this session, otherwise we will create one and close it on return.
+        """
+        if sess is None:
+            async with self.sess() as sess:
+                return await self.set_version(version, sess, flush=flush)
+
+        async with self.engine.begin() as conn:
+            if not await conn.run_sync(lambda conn: sa.inspect(conn).has_table("Version")):
+                await self.create(conn=conn)
+
+        async with sess.begin():
+            result = await sess.execute(select(_Version))
+            prev = result.scalar()
+            if prev:
+                # if exist: update
+                prev.major = version.major
+                prev.minor = version.minor
+            else:
+                # not exist: add
+                sess.add(_Version(major=version.major, minor=version.minor))
+
+        if flush:
+            await sess.commit()

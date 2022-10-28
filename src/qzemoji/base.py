@@ -7,6 +7,8 @@ from typing import Callable, Optional, Type
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
+ASessionFactory = Callable[[], AsyncSession]
+
 
 class AsyncEngineFactory:
     @classmethod
@@ -41,9 +43,9 @@ class AsyncSessionProvider:
         self._sess = sessionmaker(engine, class_=AsyncSession)
 
     @property
-    def sess(self) -> Callable[[], AsyncSession]:
+    def sess(self) -> ASessionFactory:
         self.__ensure_async_mutex()
-        return self._sess
+        return self._sess  # type: ignore
 
     def __ensure_async_mutex(self):
         """A temp fix to self.engine.pool.dispatch.connect._exec_once_mutex blocked"""
@@ -55,10 +57,15 @@ class AsyncSessionProvider:
         except AttributeError:
             return
 
-    async def _create(self, Base: Type):
+    async def _create(self, Base: Type, conn=None) -> None:
         """
         Create all tables derived from `Base`.
-        """
 
-        async with self.engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+        :param Base: the declarative base
+        :param conn: use this connection, otherwise we will create one and close it on return.
+        """
+        if conn is None:
+            async with self.engine.begin() as conn:
+                return await self._create(Base, conn=conn)
+
+        await conn.run_sync(Base.metadata.create_all)
