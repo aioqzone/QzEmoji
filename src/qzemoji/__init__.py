@@ -45,10 +45,7 @@ async def auto_update():
     global enable_auto_update
     if enable_auto_update:
         try:
-            if proxy:
-                downloaded = await FindDB.download(proxy=proxy)
-            else:
-                downloaded = await FindDB.download()
+            downloaded = await FindDB.download(proxy=proxy)
         except:
             logging.error("Failed to download database", exc_info=True)
             downloaded = False
