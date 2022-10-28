@@ -1,14 +1,17 @@
 import argparse
 import asyncio
+import logging
+from os import environ as env
 from pathlib import Path
-from typing import Dict
 
 import yaml
+from packaging.version import Version
 
 from qzemoji.base import AsyncEngineFactory
 from qzemoji.orm import EmojiOrm, EmojiTable
 
 DB_PATH = Path("data/emoji.db")
+DEBUG = env.get("RUNNER_DEBUG")
 
 
 def prepare(source: Path):
@@ -21,30 +24,28 @@ def prepare(source: Path):
         DB_PATH.unlink()
 
 
-def item_stream(p: Path):
-    with open(p, encoding="utf8") as f:
-        d: Dict[int, str] = yaml.safe_load(f)
-    yield from d.items()
-
-
 async def dump_items(source: Path):
     async with AsyncEngineFactory.sqlite3(DB_PATH) as engine:
         tbl = EmojiTable(engine)
+        with open(source, encoding="utf8") as f:
+            v, d = yaml.safe_load_all(f)
         await tbl.create()
         async with tbl.sess() as sess:
             async with sess.begin():
-                for eid, text in item_stream(source):
+                for eid, text in d.items():
                     if not text:
-                        print(f"{eid} null value. Skipped.")
+                        logging.warning(f"{eid} null value. Skipped.")
                         continue
                     sess.add(EmojiOrm(eid=eid, text=text))
-                await sess.commit()
+            await tbl.set_version(Version(v.get("version", "0.1")), sess=sess, flush=True)
 
 
 if __name__ == "__main__":
     psr = argparse.ArgumentParser()
-    psr.add_argument("-D", "--debug", help="asyncio debug mode", action="store_true")
-    psr.add_argument("-f", "--file", help="source file", default="data/emoji.yml", type=Path)
+    psr.add_argument("file", nargs="?", default="data/emoji.yml", type=Path)
+    psr.add_argument(
+        "-D", "--debug", help="asyncio debug mode", action="store_true", default=DEBUG
+    )
     arg = psr.parse_args()
 
     prepare(arg.file)

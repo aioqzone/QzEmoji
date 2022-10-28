@@ -1,3 +1,4 @@
+import asyncio
 import shutil
 from pathlib import Path
 from typing import Optional
@@ -9,38 +10,52 @@ from updater.download import download
 from updater.utils import get_latest_asset
 from updater.version import parse
 
+from qzemoji.base import AsyncEngineFactory
+from qzemoji.orm import EmojiTable
+
 
 class FindDB:
     """This class can download database from source or find existing database on local storage."""
 
     download_to = Path("data/emoji.db")
+    """Download to this path. After download, the file will be moved to :obj:`.my_db`."""
+
     my_db = Path("data/myemoji.db")
 
     @classmethod
-    async def download(cls, proxy: ProxiesTypes = ..., current_version: Optional[str] = None):
+    async def download(
+        cls, *, client: Optional[AsyncClient] = None, proxy: Optional[ProxiesTypes] = None
+    ) -> bool:
         """
         The download function downloads the latest version of the emoji database from GitHub.
         If there is no newer version, it does nothing.
 
+        :param client: use this client, otherwise we will create one and close it on return.
         :param proxy: Used to pass a proxy to the download function, defaults to None.
         :param current_version: Used to check if the current version of the plugin is greater than or equal to the one on GitHub, defaults to None.
         :return: if downloaded.
         """
-        client_dict = {}
-        if proxy != ...:
-            client_dict["proxies"] = proxy
-        async with AsyncClient(**client_dict) as client:
-            up = gh.GhUpdater(client, "aioqzone", "QzEmoji")
-            a = await get_latest_asset(up, "emoji.db", pre=True)
+        if client is None:
+            async with AsyncClient(proxies=proxy) as client:
+                return await cls.download(client=client, proxy=proxy)
 
-        if current_version and parse(a.from_tag) <= parse(current_version):
-            return False
+        up = gh.GhUpdater(client, "aioqzone", "QzEmoji")
+        online = asyncio.create_task(get_latest_asset(up, "emoji.db", pre=True))
 
-        assert await download(a.download_url, cls.download_to, proxy=proxy), "db corrupt"
+        if cls.my_db.exists():
+            async with AsyncEngineFactory.sqlite3(cls.my_db) as engine:
+                a, offline = await asyncio.gather(online, EmojiTable(engine).get_version())
+            if offline and parse(a.from_tag) <= offline:
+                return False
+        else:
+            a = await online
+
+        size = await download(a.download_url, cls.download_to, client=client, proxy=proxy)
+        assert size, "db corrupt"
         return True
 
     @classmethod
-    async def find(cls, proxy: ProxiesTypes = ...) -> Path:
+    async def find(cls, proxy: Optional[ProxiesTypes] = None) -> Path:
         """
         Find the database file or download if not exists.
 
@@ -50,7 +65,7 @@ class FindDB:
 
         if cls.my_db.exists():
             return cls.my_db
-        await cls.download(proxy)  # leave version as None since db not exist
+        await cls.download(proxy=proxy)
         shutil.move(cls.download_to.as_posix(), cls.my_db)
         assert cls.my_db.exists()
         return cls.my_db

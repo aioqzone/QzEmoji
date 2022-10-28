@@ -1,6 +1,8 @@
 from pathlib import Path
 
 import pytest
+import yaml
+from packaging.version import Version
 
 import qzemoji as qe
 from qzemoji.base import AsyncEngineFactory
@@ -32,6 +34,19 @@ async def test_update():
         assert await mem_table.query(100) != "100"
 
 
+async def test_version():
+    async with AsyncEngineFactory.sqlite3(None) as mem:
+        mem_table = EmojiTable(mem)
+        z = await mem_table.get_version()
+        assert z.major == 0
+        assert z.minor == 0
+
+        await mem_table.set_version(Version("2.1"))
+        v = await mem_table.get_version()
+        assert v.major == 2
+        assert v.minor == 1
+
+
 async def test_hit():
     assert "🐷" == await qe.query(400343)
     assert "困" == await qe.query(125)
@@ -54,3 +69,8 @@ async def test_set():
 async def test_export():
     p = await qe.export(Path("tmp/emoji.yml"))
     assert p.exists()
+    with open("tmp/emoji.yml", encoding="utf8") as f:
+        d = yaml.safe_load(f)
+    for k, v in d.items():
+        assert isinstance(k, int)
+        assert isinstance(v, str)

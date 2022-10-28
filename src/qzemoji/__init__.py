@@ -26,7 +26,6 @@ __all__ = ["auto_update", "resolve", "query", "set", "export"]
 
 proxy: Optional[ProxiesTypes] = None
 enable_auto_update = True
-__version__ = "3.4.0"
 __singleton__: EmojiTable = None  # type: ignore
 
 P = ParamSpec("P")
@@ -46,10 +45,7 @@ async def auto_update():
     global enable_auto_update
     if enable_auto_update:
         try:
-            if proxy:
-                downloaded = await FindDB.download(proxy, __version__)
-            else:
-                downloaded = await FindDB.download(current_version=__version__)
+            downloaded = await FindDB.download(proxy=proxy)
         except:
             logging.error("Failed to download database", exc_info=True)
             downloaded = False
