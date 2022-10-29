@@ -562,7 +562,7 @@ dev = []
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "107bd4c972934a816842dd0312fa55b1a977ff5c5cda5b07760a8385e6fd785d"
+content-hash = "827791e1797ffbf3cff86093fe2aba75e3e32e9b395c58f240c7ed86b4490d9f"
 
 [metadata.files]
 aiofiles = [
