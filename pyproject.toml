@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "qzemoji"
-version = "4.0.0.dev1"
+version = "4.0.0.dev2"
 description = "Translate Qzone emoji link to text."
 authors = ["aioqzone <zzzzss990315@gmail.com>"]
 license = "MIT"
@@ -21,7 +21,6 @@ optional = false
 [tool.poetry.group.test.dependencies]
 pytest = "^7.0.1"
 pytest-asyncio = "~0.19.0"
-toml = "~0.10.2"
 
 [tool.poetry.group.dev]
 optional = true
