@@ -68,6 +68,6 @@ class FindDB:
         if cls.my_db.exists():
             return cls.my_db
         await cls.download(proxy=proxy)
-        shutil.move(cls.download_to.as_posix(), cls.my_db)
+        shutil.move(cls.download_to, cls.my_db)
         assert cls.my_db.exists()
         return cls.my_db

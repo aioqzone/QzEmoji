@@ -4,10 +4,10 @@
 from pathlib import Path
 from typing import Callable, Optional, Type
 
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-
-ASessionFactory = Callable[[], AsyncSession]
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker as sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import DeclarativeBase
 
 
 class AsyncEngineFactory:
@@ -40,12 +40,12 @@ class AsyncSessionProvider:
 
     def __init__(self, engine: AsyncEngine) -> None:
         self.engine = engine
-        self._sess = sessionmaker(engine, class_=AsyncSession)
+        self._sess = sessionmaker(engine)
 
     @property
-    def sess(self) -> ASessionFactory:
+    def sess(self):
         self.__ensure_async_mutex()
-        return self._sess  # type: ignore
+        return self._sess
 
     def __ensure_async_mutex(self):
         """A temp fix to self.engine.pool.dispatch.connect._exec_once_mutex blocked"""
@@ -57,7 +57,9 @@ class AsyncSessionProvider:
         except AttributeError:
             return
 
-    async def _create(self, Base: Type, conn=None) -> None:
+    async def _create(
+        self, Base: Type[DeclarativeBase], conn: Optional[AsyncConnection] = None
+    ) -> None:
         """
         Create all tables derived from `Base`.
 
