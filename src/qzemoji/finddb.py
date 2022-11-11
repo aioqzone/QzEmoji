@@ -1,4 +1,5 @@
 import asyncio
+import re
 import shutil
 from pathlib import Path
 from typing import Optional
@@ -45,7 +46,8 @@ class FindDB:
         if cls.my_db.exists():
             async with AsyncEngineFactory.sqlite3(cls.my_db) as engine:
                 a, offline = await asyncio.gather(online, EmojiTable(engine).get_version())
-            if offline and parse(a.from_tag) <= offline:
+            m = re.search(r"EmojiDB: (\d+\.\d+)", a.from_release.body)
+            if m and offline and parse(m.group(1)) <= offline:
                 return False
         else:
             a = await online

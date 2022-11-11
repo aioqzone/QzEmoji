@@ -38,9 +38,9 @@ jobs:
       - name: Build database and wheel
         id: build
         run: |
-          poetry run python script/build.py
+          echo "db=$(poetry run python script/build.py)" >> $GITHUB_OUTPUT
           poetry build
-          echo "::set-output name=version::$(poetry version -s)"
+          echo "version=$(poetry version -s)" >> $GITHUB_OUTPUT
 
       - name: Draft a release
         uses: softprops/action-gh-release@v1
@@ -50,4 +50,5 @@ jobs:
             data/emoji.db
           tag_name: ${{ steps.build.outputs.version }}
           name: ${{ steps.build.outputs.version }}
+          body: "EmojiDB: ${{ steps.build.outputs.db }}"
           generate_release_notes: true
