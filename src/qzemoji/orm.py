@@ -6,10 +6,10 @@ from typing import Optional, cast
 import sqlalchemy as sa
 import yaml
 from packaging.version import Version
+from sqlalchemy import select
 from sqlalchemy.engine import Inspector
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker as sessionmaker
-from sqlalchemy.future import select
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_column
 
 from .base import AsyncSessionProvider
