@@ -3,6 +3,7 @@ import asyncio
 import logging
 from os import environ as env
 from pathlib import Path
+from sys import stderr
 
 import yaml
 from packaging.version import Version
@@ -11,33 +12,39 @@ from qzemoji.base import AsyncEngineFactory
 from qzemoji.orm import EmojiOrm, EmojiTable
 
 DB_PATH = Path("data/emoji.db")
-DEBUG = env.get("RUNNER_DEBUG")
+DEBUG = bool(env.get("RUNNER_DEBUG"))
 
 
-def prepare(source: Path):
+def prepare(source: Path, out: Path):
     # exist_ok added in 3.5, god
     if not source.exists():
         raise FileNotFoundError(source)
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    if DB_PATH.exists():
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if out.exists():
         # missing_ok added in 3.8, so test manually
-        DB_PATH.unlink()
+        out.unlink()
 
 
-async def dump_items(source: Path):
-    async with AsyncEngineFactory.sqlite3(DB_PATH) as engine:
+async def dump_items(source: Path, out: Path):
+    with open(source, encoding="utf8") as f:
+        v, d = yaml.safe_load_all(f)
+        assert isinstance(v, dict)
+        assert isinstance(d, dict)
+    semver: str = v.get("version", "0.1")
+
+    async with AsyncEngineFactory.sqlite3(out) as engine:
         tbl = EmojiTable(engine)
-        with open(source, encoding="utf8") as f:
-            v, d = yaml.safe_load_all(f)
         await tbl.create()
         async with tbl.sess() as sess:
             async with sess.begin():
                 for eid, text in d.items():
                     if not text:
-                        logging.warning(f"{eid} null value. Skipped.")
+                        log.warning(f"{eid} null value. Skipped.")
                         continue
                     sess.add(EmojiOrm(eid=eid, text=text))
-            await tbl.set_version(Version(v.get("version", "0.1")), sess=sess, flush=True)
+            await tbl.set_version(Version(semver), sess=sess, flush=True)
+
+    return semver
 
 
 if __name__ == "__main__":
@@ -46,7 +53,13 @@ if __name__ == "__main__":
     psr.add_argument(
         "-D", "--debug", help="asyncio debug mode", action="store_true", default=DEBUG
     )
+    psr.add_argument("-o", "--out", type=Path, default=DB_PATH, help="output db path")
     arg = psr.parse_args()
 
-    prepare(arg.file)
-    asyncio.run(dump_items(arg.file), debug=arg.debug)
+    logging.basicConfig(level="DEBUG" if arg.debug else "INFO", stream=stderr)
+    log = logging.getLogger(__name__)
+
+    prepare(arg.file, arg.out)
+    semver = asyncio.run(dump_items(arg.file, arg.out), debug=arg.debug)
+
+    print(semver)

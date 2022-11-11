@@ -27,7 +27,7 @@ async def test_autoUpdate():
 async def test_update():
     await FindDB.download()
     async with AsyncEngineFactory.sqlite3(
-        FindDB.download_to, echo=True
+        FindDB.my_db, echo=True
     ) as local, AsyncEngineFactory.sqlite3(None) as mem:
         mem_table = EmojiTable(mem)
         await mem_table.update(local)

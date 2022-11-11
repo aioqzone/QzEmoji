@@ -6,35 +6,38 @@ from typing import Optional, cast
 import sqlalchemy as sa
 import yaml
 from packaging.version import Version
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.engine import Inspector
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker as sessionmaker
 from sqlalchemy.future import select
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_column
 
-from .base import ASessionFactory, AsyncSessionProvider
+from .base import AsyncSessionProvider
 
-Base = declarative_base()
+
+class Base(MappedAsDataclass, DeclarativeBase):
+    pass
 
 
 class EmojiOrm(Base):
     __tablename__ = "Emoji"
 
-    eid = sa.Column(sa.Integer, primary_key=True)
-    text = sa.Column(sa.VARCHAR)
+    eid: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
+    text: Mapped[str] = mapped_column(sa.VARCHAR)
 
 
 class MyEmoji(Base):
     __tablename__ = "MyEmoji"
 
-    eid = sa.Column(sa.Integer, primary_key=True)
-    text = sa.Column(sa.VARCHAR)
+    eid: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
+    text: Mapped[str] = mapped_column(sa.VARCHAR)
 
 
 class _Version(Base):
     __tablename__ = "Version"
 
-    major = sa.Column(sa.Integer, primary_key=True)
-    minor = sa.Column(sa.Integer, primary_key=True)
+    major: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
+    minor: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
 
 
 class EmojiTable(AsyncSessionProvider):
@@ -67,15 +70,13 @@ class EmojiTable(AsyncSessionProvider):
 
         stmt = select(MyEmoji).where(MyEmoji.eid == eid)
         async with self.sess() as sess:
-            result = await sess.execute(stmt)
-            r1: Optional[MyEmoji] = result.scalar()
+            r1 = await sess.scalar(stmt)
             if r1:
-                return cast(str, r1.text)
+                return r1.text
             stmt = select(EmojiOrm).where(EmojiOrm.eid == eid)
-            result = await sess.execute(stmt)
-        r2: Optional[EmojiOrm] = result.scalar()
+            r2 = await sess.scalar(stmt)
         if r2:
-            return cast(str, r2.text)
+            return r2.text
 
     async def set(self, eid: int, text: str):
         """
@@ -91,8 +92,7 @@ class EmojiTable(AsyncSessionProvider):
 
         async with self.sess() as sess:
             async with sess.begin():
-                result = await sess.execute(select(MyEmoji).where(MyEmoji.eid == eid))
-                prev = result.scalar()
+                prev = await sess.scalar(select(MyEmoji).where(MyEmoji.eid == eid))
                 if prev:
                     # if exist: update
                     prev.text = text
@@ -110,25 +110,30 @@ class EmojiTable(AsyncSessionProvider):
         :return: None.
         """
 
-        sess = sessionmaker(engine, class_=AsyncSession)
-        sess = cast(ASessionFactory, sess)
+        sess = sessionmaker(engine)
         stmt = select(EmojiOrm)
 
-        def do_w_conn(c: AsyncConnection):
-            if sa.inspect(c).has_table(EmojiOrm.__tablename__):
-                EmojiOrm.__table__.drop(c)
+        def clear_o_table(c: sa.Connection):
+            isp: Optional[Inspector] = sa.inspect(c)
+            assert isp is not None
+            if isp.has_table(EmojiOrm.__tablename__):
+                cast(sa.Table, EmojiOrm.__table__).drop(c)
             EmojiOrm.metadata.create_all(c)
 
-        async with self.engine.begin() as conn:
-            # drop if exists, and create again
-            await conn.run_sync(do_w_conn)
+        def check_n_table(c: sa.Connection):
+            isp: Optional[Inspector] = sa.inspect(c)
+            assert isp.has_table(EmojiOrm.__tablename__), "Incoming database has no `Emoji` table."
 
-        async with self.sess() as os, os.begin():
+        async with self.engine.begin() as oc, engine.begin() as nc:
+            # drop if exists, and create again
+            await asyncio.gather(oc.run_sync(clear_o_table), nc.run_sync(check_n_table))
+
+        async with self.sess() as os:
             async with sess() as ns:
-                ns: AsyncSession
-                objs = (await ns.execute(stmt)).scalars().all()
-            # TODO: waiting for improvement
-            os.add_all([EmojiOrm(eid=i.eid, text=i.text) for i in objs])
+                objs = (await ns.scalars(stmt)).all()
+            async with os.begin():
+                # TODO: waiting for improvement
+                os.add_all([EmojiOrm(eid=i.eid, text=i.text) for i in objs])
             await os.commit()
 
     async def export(self, path: PathLike, full: bool = True) -> Path:
@@ -146,13 +151,15 @@ class EmojiTable(AsyncSessionProvider):
         stmg = select(EmojiOrm)
         async with self.sess() as sess:
             if full:
-                rp, rg = await asyncio.gather(sess.execute(stmp), sess.execute(stmg))
-                rp, rg = rp.scalars(), rg.scalars()
+                # rp, rg = await asyncio.gather(sess.scalars(stmp), sess.scalars(stmg))
+                # BUG: asyncio.gather broken
+                rp = await sess.scalars(stmp)
+                rg = await sess.scalars(stmg)
             else:
-                rp = (await sess.execute(stmp)).scalars()
-                rg = []  # just suppress warning
+                rp = await sess.scalars(stmp)
+                rg = ()  # just suppress warning
 
-        d = {o.eid: o.text for o in rg} if full else {}
+        d = {o.eid: o.text for o in rg}
         d.update({o.eid: o.text for o in rp})
 
         if not isinstance(path, Path):
@@ -175,12 +182,13 @@ class EmojiTable(AsyncSessionProvider):
         z = Version("0.0")
 
         async with self.engine.begin() as conn:
-            if not await conn.run_sync(lambda conn: sa.inspect(conn).has_table("Version")):
+            if not await conn.run_sync(
+                lambda conn: sa.inspect(conn).has_table(_Version.__tablename__)
+            ):
                 return z
 
         stmp = select(_Version)
-        result = await sess.execute(stmp)
-        r: Optional[_Version] = result.scalar()
+        r = await sess.scalar(stmp)
 
         if r is None:
             return z
@@ -200,12 +208,13 @@ class EmojiTable(AsyncSessionProvider):
                 return await self.set_version(version, sess, flush=flush)
 
         async with self.engine.begin() as conn:
-            if not await conn.run_sync(lambda conn: sa.inspect(conn).has_table("Version")):
+            if not await conn.run_sync(
+                lambda conn: sa.inspect(conn).has_table(_Version.__tablename__)
+            ):
                 await self.create(conn=conn)
 
         async with sess.begin():
-            result = await sess.execute(select(_Version))
-            prev = result.scalar()
+            prev = await sess.scalar(select(_Version))
             if prev:
                 # if exist: update
                 prev.major = version.major

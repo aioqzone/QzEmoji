@@ -57,7 +57,8 @@ async def auto_update():
         assert FindDB.download_to.exists()
 
         async with AsyncEngineFactory.sqlite3(FindDB.download_to) as engine:
-            return await __singleton__.update(engine)
+            await __singleton__.update(engine)
+        FindDB.download_to.unlink()
 
 
 def auto_update_decorator(func: Callable[P, Awaitable[T]]) -> Callable[P, Coroutine[Any, Any, T]]:
