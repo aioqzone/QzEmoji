@@ -38,7 +38,7 @@ jobs:
           cache: poetry
       - name: Get Package Version
         id: version_step
-        run: echo "::set-output name=package::$(poetry version -s)"
+        run: echo "package=$(poetry version -s)" >> $GITHUB_OUTPUT
       #----------------------------------------------
       #   install your root project, if required
       #----------------------------------------------
