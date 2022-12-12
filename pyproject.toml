@@ -10,7 +10,7 @@ repository = "https://github.com/aioqzone/QzEmoji"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-SQLAlchemy = "^2.0.0b3"
+SQLAlchemy = "^2.0.0b4"
 aiosqlite = "~0.17.0"
 assetsupdater = { url = "https://github.com/JamzumSum/AssetsUpdater/releases/download/1.5.1/assetsupdater-1.5.1-py3-none-any.whl" }
 PyYAML = "^6.0"
