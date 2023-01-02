@@ -32,6 +32,7 @@ async def test_update():
         mem_table = EmojiTable(mem)
         await mem_table.update(local)
         assert await mem_table.query(100) != "100"
+        assert await mem_table.get_version() == await EmojiTable(local).get_version()
 
 
 async def test_version():
