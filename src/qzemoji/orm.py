@@ -108,6 +108,10 @@ class EmojiTable(AsyncSessionProvider):
 
         :param engine: Engine to a new database to get data from.
         :return: None.
+
+        .. versionchanged:: 4.1.0.dev3
+
+            update `Version` table as well
         """
 
         sess = sessionmaker(engine)
@@ -131,10 +135,11 @@ class EmojiTable(AsyncSessionProvider):
         async with self.sess() as os:
             async with sess() as ns:
                 objs = (await ns.scalars(stmt)).all()
+                new_version = await self.get_version(ns)
             async with os.begin():
-                # TODO: waiting for improvement
                 os.add_all([EmojiOrm(eid=i.eid, text=i.text) for i in objs])
             await os.commit()
+            await self.set_version(new_version, os)
 
     async def export(self, path: PathLike, full: bool = True) -> Path:
         """Export emoji table to a yaml file. User may start a PR with this file.

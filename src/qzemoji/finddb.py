@@ -57,17 +57,20 @@ class FindDB:
         return True
 
     @classmethod
-    async def find(cls, proxy: Optional[ProxiesTypes] = None) -> Path:
+    async def find(cls, proxy: Optional[ProxiesTypes] = None) -> Optional[Path]:
         """
         Find the database file or download if not exists.
 
         :param proxy: Used to pass a proxy to the download function, defaults to None.
-        :return: the path to the database.
+        :return: the path to the database, or None if download error.
         """
 
         if cls.my_db.exists():
             return cls.my_db
-        await cls.download(proxy=proxy)
+        try:
+            await cls.download(proxy=proxy)
+        except:
+            return
         shutil.move(cls.download_to, cls.my_db)
         assert cls.my_db.exists()
         return cls.my_db
