@@ -1,52 +1,40 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: Dev CI
+name: Test
 
 on:
-  workflow_call:
-    inputs:
-      PYTEST_ARGS:
-        type: string
-        required: true
-    outputs:
-      package-version:
-        description: version of this python package output by poetry
-        value: ${{ jobs.install-test.outputs.package-version }}
+  pull_request:
+    types:
+      - review_requested
+    branches:
+      - beta
+      - release
+
+concurrency:
+  group: test-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
-  install-test:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.11", "3.7"]
-
-    outputs:
-      package-version: ${{ steps.version_step.outputs.package }}
-
     steps:
-      #----------------------------------------------
-      #       check-out repo and set-up python
-      #----------------------------------------------
       - uses: actions/checkout@v3
-      - name: Install poetry
+      - name: Install Poetry
         run: pipx install poetry
+
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: poetry
-      - name: Get Package Version
-        id: version_step
-        run: echo "package=$(poetry version -s)" >> $GITHUB_OUTPUT
-      #----------------------------------------------
-      #   install your root project, if required
-      #----------------------------------------------
-      - name: Install library
-        run: poetry install --no-interaction -vv
-      #----------------------------------------------
-      #    add matrix specifics and run test suite
-      #----------------------------------------------
-      - name: Test with pytest
+
+      - name: Install and Test
         run: |
-          poetry run pytest ${{ inputs.PYTEST_ARGS }}
+          echo "::group::Install Dependencies"
+          poetry install -n -vv
+          echo "::endgroup::"
+
+          echo "::group::pytest outputs"
+          poetry run pytest test
+          echo "::endgroup::"
