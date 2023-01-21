@@ -23,9 +23,10 @@ async def test_build():
 
     with open("data/emoji.yml", encoding="utf8") as f:
         v, _ = yaml.safe_load_all(f)
-    assert ver == v["version"]
+    semver = v["version"]
+    assert ver == semver
 
-    out = Path("tmp/build.db")
+    out = Path(f"tmp/build-{semver}.db")
 
     async with AsyncEngineFactory.sqlite3(out) as engine:
         built = EmojiTable(engine)

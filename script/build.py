@@ -19,10 +19,16 @@ def prepare(source: Path, out: Path):
     # exist_ok added in 3.5, god
     if not source.exists():
         raise FileNotFoundError(source)
+    with open(source, encoding="utf8") as f:
+        v: dict = next(yaml.safe_load_all(f))
+    semver: str = v.get("version", "0.1")
+
+    out = out.with_name(f"{out.stem}-{semver}.db")  # force add version tag to filename
     out.parent.mkdir(parents=True, exist_ok=True)
     if out.exists():
         # missing_ok added in 3.8, so test manually
         out.unlink()
+    return out
 
 
 async def dump_items(source: Path, out: Path):
@@ -59,7 +65,7 @@ if __name__ == "__main__":
     logging.basicConfig(level="DEBUG" if arg.debug else "INFO", stream=stderr)
     log = logging.getLogger(__name__)
 
-    prepare(arg.file, arg.out)
+    arg.out = prepare(arg.file, arg.out)
     semver = asyncio.run(dump_items(arg.file, arg.out), debug=arg.debug)
 
     print(semver)
