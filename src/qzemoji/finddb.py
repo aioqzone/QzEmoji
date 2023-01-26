@@ -41,12 +41,15 @@ class FindDB:
                 return await cls.download(client=client, proxy=proxy)
 
         up = gh.GhUpdater(client, "aioqzone", "QzEmoji")
-        online = asyncio.create_task(get_latest_asset(up, "emoji.db", pre=True))
+        online = asyncio.create_task(get_latest_asset(up, r"emoji.*\.db", pre=True))
 
         if cls.my_db.exists():
             async with AsyncEngineFactory.sqlite3(cls.my_db) as engine:
                 a, offline = await asyncio.gather(online, EmojiTable(engine).get_version())
-            m = re.search(r"EmojiDB: (\d+\.\d+)", a.from_release.body)
+            m = re.search(r"emoji\-(\d+\.\d+)\.db", a.name)
+            if m is None:
+                # deprecated
+                m = re.search(r"EmojiDB: (\d+\.\d+)", a.from_release.body)
             if m and offline and parse(m.group(1)) <= offline:
                 return False
         else:

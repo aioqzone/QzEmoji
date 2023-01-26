@@ -1,54 +1,59 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Build
+name: Release and Upload to aioqzone-index
 
 on:
-  pull_request:
+  pull_request_target:
     types:
       - closed
     branches:
-      - beta
-      - beta/**
-      - release
-      - release/**
+      - "beta"
+      - "beta/**"
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  build-upload:
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'python')
+    env:
+      GH_TOKEN: ${{ github.token }}
+      index-repo: aioqzone/aioqzone-index
+    permissions:
+      contents: write # release needs write permission
     steps:
-      #----------------------------------------------
-      #       check-out repo and set-up python
-      #----------------------------------------------
       - uses: actions/checkout@v3
       - name: Install poetry
         run: pipx install poetry
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
-          cache: poetry
-      #----------------------------------------------
-      #   install your root project, if required
-      #----------------------------------------------
-      - name: Install library
-        run: poetry install -n -vv
-      #----------------------------------------------
-      #  build package and database, draft a release
-      #----------------------------------------------
-      - name: Build database and wheel
+          python-version: "3.10"
+          # cache: poetry
+
+      - name: Build dist
         id: build
         run: |
-          echo "db=$(poetry run python script/build.py)" >> $GITHUB_OUTPUT
-          poetry build
-          echo "version=$(poetry version -s)" >> $GITHUB_OUTPUT
+          version=$(poetry version -s)
+          echo "version=$version" >> $GITHUB_ENV
 
-      - name: Draft a release
-        uses: softprops/action-gh-release@v1
+          poetry build
+
+      - name: Upload to Release
+        id: upload
+        uses: JamzumSum/actions/hash-release@master
         with:
-          files: |
-            dist/*
-            data/emoji.db
-          tag_name: ${{ steps.build.outputs.version }}
-          name: ${{ steps.build.outputs.version }}
-          body: "EmojiDB: ${{ steps.build.outputs.db }}"
-          generate_release_notes: true
+          tag: ${{ env.version }}
+          files: dist/*
+
+      - name: Add to aioqzone-index
+        env:
+          urls: ${{ steps.upload.outputs.urls }}
+          GH_TOKEN: ${{ secrets.REPO_TOKEN }} # this is a fine-grained PAT
+        run: |
+          gh workflow -R ${{ env.index-repo }} run add.yml \
+                      -f project=QzEmoji \
+                      -f urls="$urls"
