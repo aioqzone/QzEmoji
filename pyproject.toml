@@ -10,6 +10,7 @@ repository = "https://github.com/aioqzone/QzEmoji"
 
 [tool.poetry.dependencies]
 python = "^3.7"
+httpx = "^0.23.0"
 SQLAlchemy = { version = "^2.0.0", extras = ["asyncio", "aiosqlite"] }
 PyYAML = "^6.0"
 

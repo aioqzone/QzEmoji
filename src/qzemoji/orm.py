@@ -1,7 +1,8 @@
 import asyncio
+from hashlib import sha256
 from os import PathLike
 from pathlib import Path
-from typing import Optional, cast
+from typing import Optional, Type, cast
 
 import sqlalchemy as sa
 import yaml
@@ -31,13 +32,6 @@ class MyEmoji(Base):
 
     eid: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     text: Mapped[str] = mapped_column(sa.VARCHAR)
-
-
-class _Version(Base):
-    __tablename__ = "Version"
-
-    major: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
-    minor: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
 
 
 class EmojiTable(AsyncSessionProvider):
@@ -135,11 +129,9 @@ class EmojiTable(AsyncSessionProvider):
         async with self.sess() as os:
             async with sess() as ns:
                 objs = (await ns.scalars(stmt)).all()
-                new_version = await self.get_version(ns)
             async with os.begin():
                 os.add_all([EmojiOrm(eid=i.eid, text=i.text) for i in objs])
             await os.commit()
-            await self.set_version(new_version, os)
 
     async def export(self, path: PathLike, full: bool = True) -> Path:
         """Export emoji table to a yaml file. User may start a PR with this file.
@@ -175,58 +167,17 @@ class EmojiTable(AsyncSessionProvider):
             yaml.safe_dump(d, f, sort_keys=True, allow_unicode=True)
         return path
 
-    async def get_version(self, sess: Optional[AsyncSession] = None) -> Version:
-        """Get version of the database. The version indicates the version of the "Emoji" table.
+    async def sha256(self) -> str:
+        """Calculate sha256 of ``Emoji`` table.
 
-        :param: Use this session if it is not None. Otherwise we will create one and close it on return.
+        :return: sha256 in lower case.
+
+        .. versionadded:: 5.0.0
         """
-        if sess is None:
-            async with self.sess() as sess:
-                return await self.get_version(sess)
+        statement = select(EmojiOrm)
+        async with self.sess() as sess:
+            r = await sess.scalars(statement)
 
-        z = Version("0.0")
-
-        async with self.engine.begin() as conn:
-            if not await conn.run_sync(
-                lambda conn: sa.inspect(conn).has_table(_Version.__tablename__)
-            ):
-                return z
-
-        stmp = select(_Version)
-        r = await sess.scalar(stmp)
-
-        if r is None:
-            return z
-        return Version(f"{r.major}.{r.minor}")
-
-    async def set_version(
-        self, version: Version, sess: Optional[AsyncSession] = None, flush=True
-    ) -> None:
-        """Set version of the database. We should increase the version of the "Emoji" table before
-        we release a new database.
-
-        :param version: version to set
-        :param sess: use this session, otherwise we will create one and close it on return.
-        """
-        if sess is None:
-            async with self.sess() as sess:
-                return await self.set_version(version, sess, flush=flush)
-
-        async with self.engine.begin() as conn:
-            if not await conn.run_sync(
-                lambda conn: sa.inspect(conn).has_table(_Version.__tablename__)
-            ):
-                await self.create(conn=conn)
-
-        async with sess.begin():
-            prev = await sess.scalar(select(_Version))
-            if prev:
-                # if exist: update
-                prev.major = version.major
-                prev.minor = version.minor
-            else:
-                # not exist: add
-                sess.add(_Version(major=version.major, minor=version.minor))
-
-        if flush:
-            await sess.commit()
+        d = {o.eid: o.text for o in r}
+        s = ";".join(f"{k}={d[k]}" for k in sorted(d))
+        return sha256(s.encode("utf8")).hexdigest().lower()

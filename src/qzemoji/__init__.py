@@ -9,7 +9,6 @@
 """
 
 import asyncio
-import logging
 from functools import wraps
 from typing import Any, Awaitable, Callable, Coroutine, Optional, TypeVar
 
@@ -45,20 +44,16 @@ async def auto_update():
     global enable_auto_update
     if enable_auto_update:
         try:
-            downloaded = await FindDB.download(proxy=proxy)
-        except:
-            logging.error("Failed to download database", exc_info=True)
-            downloaded = False
+            await FindDB.download(proxy=proxy)
         finally:
             enable_auto_update = False
 
-        if not downloaded:
+        if not FindDB.predefined.exists():
             return
-        assert FindDB.download_to.exists()
 
-        async with AsyncEngineFactory.sqlite3(FindDB.download_to) as engine:
+        async with AsyncEngineFactory.sqlite3(FindDB.predefined) as engine:
             await __singleton__.update(engine)
-        FindDB.download_to.unlink()
+        FindDB.predefined.unlink()
 
 
 def auto_update_decorator(func: Callable[P, Awaitable[T]]) -> Callable[P, Coroutine[Any, Any, T]]:

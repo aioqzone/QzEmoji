@@ -108,5 +108,4 @@ See [CONTRIBUTING](CONTRIBUTING.md)
 
 [qzone2tg]: https://github.com/aioqzone/Qzone2TG "Forward Qzone feeds to telegram"
 [principle]: https://github.com/aioqzone/QzEmoji/discussions/2 "欢迎分享!"
-[updater]: https://github.com/aioqzone/AssetsUpdater "Update assets from network"
 [homepage]: https://github.com/aioqzone/QzEmoji "Translate Qzone Emoji link to text."
