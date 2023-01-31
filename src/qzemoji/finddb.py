@@ -39,7 +39,9 @@ class FindDB:
                 return await cls.download(client=client, proxy=proxy)
 
         async def get_online_url() -> Optional[str]:
-            r = await client.get("https://aioqzone.github.io/simple/qzemoji/index.html")
+            r = await client.get(
+                "https://aioqzone.github.io/aioqzone-index/simple/qzemoji/index.html"
+            )
             m = re.search(r'<a\s+href="(http.*)">\s*emoji.db\s*</a>', r.text)
             return m and m.group(1)
 
