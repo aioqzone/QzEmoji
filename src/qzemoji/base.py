@@ -2,7 +2,7 @@
 """
 
 from pathlib import Path
-from typing import Callable, Optional, Type
+from typing import Optional, Type
 
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker as sessionmaker

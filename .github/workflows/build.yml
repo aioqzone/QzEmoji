@@ -31,16 +31,23 @@ jobs:
         run: pipx install poetry
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
-          # cache: poetry
+          python-version: "3.11"
+          cache: poetry
 
-      - name: Build dist
+      - name: Build dist and database
         id: build
         run: |
           version=$(poetry version -s)
           echo "version=$version" >> $GITHUB_ENV
 
+          echo "::group::build package"
           poetry build
+          echo "::endgroup::"
+
+          echo "::group::install dependencies"
+          poetry install --without test
+          echo "::endgroup::"
+
           hash=$(poetry run python script/build.py)
           echo "db-hash=$hash" >> $GITHUB_OUTPUT
 
@@ -57,7 +64,7 @@ jobs:
           urls: ${{ steps.upload.outputs.urls }}
           hash: ${{ steps.build.outputs.db-hash }}
         run: |
-          urls=$(echo $urls | sed 's/emoji.db#sha256=..*/emoji.db#sha256=$hash/')
+          urls=$(echo $urls | sed "s/emoji.db#sha256=\w*/emoji.db#sha256=$hash/")
           echo "urls=$urls" >> $GITHUB_OUTPUT
 
       - name: Add to aioqzone-index
