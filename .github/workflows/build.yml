@@ -41,17 +41,28 @@ jobs:
           echo "version=$version" >> $GITHUB_ENV
 
           poetry build
+          hash=$(poetry run python script/build.py)
+          echo "db-hash=$hash" >> $GITHUB_OUTPUT
 
       - name: Upload to Release
         id: upload
         uses: JamzumSum/actions/hash-release@master
         with:
           tag: ${{ env.version }}
-          files: dist/*
+          files: dist/* data/emoji.db
+
+      - name: replace hash
+        id: rehash
+        env:
+          urls: ${{ steps.upload.outputs.urls }}
+          hash: ${{ steps.build.outputs.db-hash }}
+        run: |
+          urls=$(echo $urls | sed 's/emoji.db#sha256=..*/emoji.db#sha256=$hash/')
+          echo "urls=$urls" >> $GITHUB_OUTPUT
 
       - name: Add to aioqzone-index
         env:
-          urls: ${{ steps.upload.outputs.urls }}
+          urls: ${{ steps.rehash.outputs.urls }}
           GH_TOKEN: ${{ secrets.REPO_TOKEN }} # this is a fine-grained PAT
         run: |
           gh workflow -R ${{ env.index-repo }} run add.yml \
