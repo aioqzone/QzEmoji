@@ -674,6 +674,7 @@ files = [
 [[package]]
 name = "sqlalchemy"
 version = "2.0.0"
+version = "2.0.0"
 description = "Database Abstraction Library"
 category = "main"
 optional = false
