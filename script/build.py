@@ -6,7 +6,6 @@ from pathlib import Path
 from sys import stderr
 
 import yaml
-from packaging.version import Version
 
 from qzemoji.base import AsyncEngineFactory
 from qzemoji.orm import EmojiOrm, EmojiTable
@@ -16,14 +15,10 @@ DEBUG = bool(env.get("RUNNER_DEBUG"))
 
 
 def prepare(source: Path, out: Path):
-    # exist_ok added in 3.5, god
     if not source.exists():
         raise FileNotFoundError(source)
-    with open(source, encoding="utf8") as f:
-        v: dict = next(yaml.safe_load_all(f))
-    semver: str = v.get("version", "0.1")
 
-    out = out.with_name(f"{out.stem}-{semver}.db")  # force add version tag to filename
+    out = out.with_name(f"{out.stem}.db")
     out.parent.mkdir(parents=True, exist_ok=True)
     if out.exists():
         # missing_ok added in 3.8, so test manually
@@ -33,24 +28,20 @@ def prepare(source: Path, out: Path):
 
 async def dump_items(source: Path, out: Path):
     with open(source, encoding="utf8") as f:
-        v, d = yaml.safe_load_all(f)
-        assert isinstance(v, dict)
+        d = yaml.safe_load(f)
         assert isinstance(d, dict)
-    semver: str = v.get("version", "0.1")
 
     async with AsyncEngineFactory.sqlite3(out) as engine:
         tbl = EmojiTable(engine)
         await tbl.create()
-        async with tbl.sess() as sess:
-            async with sess.begin():
-                for eid, text in d.items():
-                    if not text:
-                        log.warning(f"{eid} null value. Skipped.")
-                        continue
-                    sess.add(EmojiOrm(eid=eid, text=text))
-            await tbl.set_version(Version(semver), sess=sess, flush=True)
+        async with tbl.sess() as sess, sess.begin():
+            for eid, text in d.items():
+                if not text:
+                    log.warning(f"{eid} null value. Skipped.")
+                    continue
+                sess.add(EmojiOrm(eid=eid, text=text))
 
-    return semver
+        return await tbl.sha256()
 
 
 if __name__ == "__main__":
@@ -66,6 +57,6 @@ if __name__ == "__main__":
     log = logging.getLogger(__name__)
 
     arg.out = prepare(arg.file, arg.out)
-    semver = asyncio.run(dump_items(arg.file, arg.out), debug=arg.debug)
+    sha256 = asyncio.run(dump_items(arg.file, arg.out), debug=arg.debug)
 
-    print(semver)
+    print(sha256)

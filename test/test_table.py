@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-from packaging.version import Version
 
 import qzemoji as qe
 from qzemoji.base import AsyncEngineFactory
@@ -32,20 +31,21 @@ async def test_update():
         mem_table = EmojiTable(mem)
         await mem_table.update(local)
         assert await mem_table.query(100) != "100"
-        assert await mem_table.get_version() == await EmojiTable(local).get_version()
 
 
-async def test_version():
-    async with AsyncEngineFactory.sqlite3(None) as mem:
+async def test_sha256():
+    async with AsyncEngineFactory.sqlite3(FindDB.my_db) as local, AsyncEngineFactory.sqlite3(
+        None
+    ) as mem:
+        h1 = await EmojiTable(local).sha256()
         mem_table = EmojiTable(mem)
-        z = await mem_table.get_version()
-        assert z.major == 0
-        assert z.minor == 0
+        await mem_table.update(local)
+        h2 = await mem_table.sha256()
+        assert h1 == h2
 
-        await mem_table.set_version(Version("2.1"))
-        v = await mem_table.get_version()
-        assert v.major == 2
-        assert v.minor == 1
+        await mem_table.set(100, "hello")
+        h3 = await mem_table.sha256()
+        assert h2 == h3
 
 
 async def test_hit():

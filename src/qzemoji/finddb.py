@@ -6,19 +6,17 @@ from typing import Optional
 
 from httpx import AsyncClient
 from httpx._types import ProxiesTypes
-from updater import github as gh
-from updater.download import download
-from updater.utils import get_latest_asset
-from updater.version import parse
 
 from qzemoji.base import AsyncEngineFactory
 from qzemoji.orm import EmojiTable
+
+FALLBACK_DB = "https://github.com/aioqzone/QzEmoji/releases/download/4.1.1.dev1/emoji.db"
 
 
 class FindDB:
     """This class can download database from source or find existing database on local storage."""
 
-    download_to = Path("data/emoji.db")
+    predefined = Path("data/emoji.db")
     """Download to this path. After download, the file will be moved to :obj:`.my_db`."""
 
     my_db = Path("data/myemoji.db")
@@ -37,26 +35,33 @@ class FindDB:
         :return: if downloaded.
         """
         if client is None:
-            async with AsyncClient(proxies=proxy) as client:
+            async with AsyncClient(proxies=proxy, follow_redirects=True) as client:
                 return await cls.download(client=client, proxy=proxy)
 
-        up = gh.GhUpdater(client, "aioqzone", "QzEmoji")
-        online = asyncio.create_task(get_latest_asset(up, r"emoji.*\.db", pre=True))
+        async def get_online_url() -> Optional[str]:
+            r = await client.get("https://aioqzone.github.io/simple/qzemoji/index.html")
+            m = re.search(r'<a\s+href="(http.*)">\s*emoji.db\s*</a>', r.text)
+            return m and m.group(1)
 
+        url = None
         if cls.my_db.exists():
-            async with AsyncEngineFactory.sqlite3(cls.my_db) as engine:
-                a, offline = await asyncio.gather(online, EmojiTable(engine).get_version())
-            m = re.search(r"emoji\-(\d+\.\d+)\.db", a.name)
-            if m is None:
-                # deprecated
-                m = re.search(r"EmojiDB: (\d+\.\d+)", a.from_release.body)
-            if m and offline and parse(m.group(1)) <= offline:
-                return False
-        else:
-            a = await online
+            url = await get_online_url()
+            if url:
+                m = re.search(r"#sha256=(\w+)", url)
+                if m:
+                    async with AsyncEngineFactory.sqlite3(cls.my_db) as engine:
+                        if m.group(1).lower() == await EmojiTable(engine).sha256():
+                            return False
+                        else:
+                            url = url[: url.find("#")]
+        if url is None:
+            url = FALLBACK_DB
 
-        size = await download(a.download_url, cls.download_to, client=client, proxy=proxy)
-        assert size, "db corrupt"
+        async with client.stream("GET", url) as r:
+            with open(cls.predefined, "wb") as f:
+                async for b in r.aiter_bytes():
+                    f.write(b)
+
         return True
 
     @classmethod
@@ -70,10 +75,13 @@ class FindDB:
 
         if cls.my_db.exists():
             return cls.my_db
+
         try:
             await cls.download(proxy=proxy)
         except:
             return
-        shutil.move(cls.download_to, cls.my_db)
+
+        # my_db not exist, so move will not overwrite
+        shutil.move(cls.predefined.as_posix(), cls.my_db.as_posix())
         assert cls.my_db.exists()
         return cls.my_db

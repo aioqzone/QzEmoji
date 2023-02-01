@@ -1,10 +1,10 @@
 import subprocess as sp
 import sys
+from hashlib import sha256
 from pathlib import Path
 
 import pytest
 import yaml
-from updater.utils import parse
 
 from qzemoji.base import AsyncEngineFactory
 from qzemoji.orm import EmojiTable
@@ -19,18 +19,19 @@ async def test_build():
         capture_output=True,
     )
     assert not r.stderr
-    ver = r.stdout.decode().rstrip()
+    h1 = r.stdout.decode().rstrip()
 
     with open("data/emoji.yml", encoding="utf8") as f:
-        v, _ = yaml.safe_load_all(f)
-    semver = v["version"]
-    assert ver == semver
+        d = yaml.safe_load(f)
+    s = ";".join(f"{k}={d[k]}" for k in sorted(d))
+    h2 = sha256(s.encode("utf8")).hexdigest().lower()
+    assert h1 == h2
 
-    out = Path(f"tmp/build-{semver}.db")
+    out = Path(f"tmp/build.db")
 
     async with AsyncEngineFactory.sqlite3(out) as engine:
         built = EmojiTable(engine)
         assert not await built.is_corrupt()
-        assert await built.get_version() == parse(ver)
+        assert h2 == await built.sha256()
 
     out.unlink()
