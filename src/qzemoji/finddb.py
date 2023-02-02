@@ -59,6 +59,7 @@ class FindDB:
         if url is None:
             url = FALLBACK_DB
 
+        cls.predefined.parent.mkdir(exist_ok=True)
         async with client.stream("GET", url) as r:
             with open(cls.predefined, "wb") as f:
                 async for b in r.aiter_bytes():
@@ -84,6 +85,7 @@ class FindDB:
             return
 
         # my_db not exist, so move will not overwrite
+        cls.my_db.parent.mkdir(exist_ok=True)
         shutil.move(cls.predefined.as_posix(), cls.my_db.as_posix())
         assert cls.my_db.exists()
         return cls.my_db
