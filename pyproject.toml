@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "qzemoji"
-version = "5.0.0.dev4"
+version = "5.1.0"
 description = "Translate Qzone emoji link to text."
 authors = ["aioqzone <zzzzss990315@gmail.com>"]
 license = "MIT"
@@ -9,9 +9,9 @@ homepage = "https://github.com/aioqzone/QzEmoji"
 repository = "https://github.com/aioqzone/QzEmoji"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 httpx = "^0.23.0"
-SQLAlchemy = { version = "^2.0.3", extras = ["asyncio", "aiosqlite"] }
+SQLAlchemy = { version = "^2.0.4", extras = ["asyncio", "aiosqlite"] }
 PyYAML = "^6.0"
 
 [tool.poetry.group.test]
@@ -25,10 +25,7 @@ pytest-asyncio = "~0.20.1"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = [
-    { version = "^2.20.0", python = "~3.7" },
-    { version = "^3.0.1", python = "^3.8" },
-]
+pre-commit = "^3.0.1"
 black = "^22.1.0"
 isort = "^5.10.1"
 
@@ -56,4 +53,4 @@ line_length = 99
 
 [tool.black]
 line-length = 99
-target-version = ['py37']
+target-version = ['py38']
