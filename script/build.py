@@ -20,9 +20,7 @@ def prepare(source: Path, out: Path):
 
     out = out.with_name(f"{out.stem}.db")
     out.parent.mkdir(parents=True, exist_ok=True)
-    if out.exists():
-        # missing_ok added in 3.8, so test manually
-        out.unlink()
+    out.unlink(missing_ok=True)
     return out
 
 

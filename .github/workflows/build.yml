@@ -19,7 +19,9 @@ concurrency:
 jobs:
   build-upload:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'python')
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'release')
     env:
       GH_TOKEN: ${{ github.token }}
       index-repo: aioqzone/aioqzone-index
