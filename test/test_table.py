@@ -4,6 +4,7 @@ import pytest
 import yaml
 
 import qzemoji as qe
+import qzemoji.utils as qeu
 from qzemoji.base import AsyncEngineFactory
 from qzemoji.finddb import FindDB
 from qzemoji.orm import EmojiTable
@@ -12,10 +13,10 @@ pytestmark = pytest.mark.asyncio
 
 
 async def test_resolve():
-    assert 400343 == qe.resolve(url="http://qzonestyle.gtimg.cn/qzone/em/e400343.gif")
-    assert 400343 == qe.resolve(tag="[em]e400343[/em]")
-    pytest.raises(AssertionError, qe.resolve, url="", tag="")
-    pytest.raises(ValueError, qe.resolve, tag="[em] e400343[/em]")
+    assert 400343 == qeu.resolve(url="http://qzonestyle.gtimg.cn/qzone/em/e400343.gif")
+    assert 400343 == qeu.resolve(tag="[em]e400343[/em]")
+    pytest.raises(AssertionError, qeu.resolve, url="", tag="")
+    pytest.raises(ValueError, qeu.resolve, tag="[em] e400343[/em]")
 
 
 async def test_autoUpdate():

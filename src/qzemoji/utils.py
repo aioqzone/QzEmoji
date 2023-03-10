@@ -5,6 +5,8 @@ from typing import Optional
 from httpx import URL
 from httpx._types import URLTypes
 
+import qzemoji as qe
+
 
 def resolve(*, url: Optional[URLTypes] = None, tag: Optional[str] = None):
     """
@@ -51,3 +53,29 @@ def build_html(eid: int, host: str = "qzonestyle.gtimg.cn", ext: str = "png"):
 
 def build_tag(eid: int):
     return f"[em]e{eid}[/em]"
+
+
+def wrap_plain_text(name: str, fmt="[/{name}]") -> str:
+    """This function wraps the given `name` with the given `fmt`, if it is not a pure emoji word.
+
+    :param name: the customized emoji name.
+    :param fmt: a format string in ``{`` style, default as ``[/{name}]``.
+    :return: The emoji itself if it is a pure emoji word, otherwise a string wrapped by the `fmt`.
+    """
+    if re.fullmatch(r"[^\u0000-\uFFFF]*", name):
+        return name
+    return fmt.format(name=name)
+
+
+async def query_wrap(eid: int, fmt="[/{name}]") -> str:
+    """This function query the given eid and wraps it if it is not a pure emoji word. If the name is not
+    stored in the database, then it will return a ``[/em]`` tag.
+
+    :return: a ``[/em]`` tag if query has no result, otherwise a wrapped name.
+
+    .. seealso:: :meth:`wrap_plain_text`, :meth:`~qzemoji.utils.build_tag`
+    """
+    name = await qe.query(eid)
+    if name is None:
+        return build_tag(eid)
+    return wrap_plain_text(name, fmt=fmt)
