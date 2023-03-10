@@ -2,7 +2,7 @@
 
 将Qzone表情链接转换为文字.
 
-[![python](https://img.shields.io/badge/python-3.7%20%7C%203.11-blue)][homepage]
+[![python](https://img.shields.io/badge/python-3.8%20%7C%203.11-blue)][homepage]
 [![Test](https://github.com/aioqzone/QzEmoji/actions/workflows/test.yml/badge.svg?branch=async)](https://github.com/aioqzone/QzEmoji/blob/async/.github/workflows/test.yml)
 [![rules](https://img.shields.io/tokei/lines/github/aioqzone/QzEmoji?label=rules)](CONTRIBUTING.md)
 [![black](https://img.shields.io/badge/code%20style-black-000000)](https://github.com/psf/black)
@@ -18,20 +18,21 @@ Qzone似乎并没有提供表情序号到中文名称的接口. 通过爬虫和�
 首先通过正则表达式等等方式解析`id`:
 
 ``` python
->>> import qzemoji as qe
->>> qe.resolve(url='http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
+>>> import qzemoji.utils as qeu
+>>> qeu.resolve(url='http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
 400343
->>> qe.resolve(tag='[em]e400343[/em]')
+>>> qeu.resolve(tag='[em]e400343[/em]')
 400343
->>> qe.resolve('no kwargs specified')
+>>> qeu.resolve('no kwargs specified')
 AssertionError
->>> qe.resolve(tag='[em] e400343[/em]')
+>>> qeu.resolve(tag='[em] e400343[/em]')
 ValueError('[em] e400343[/em]')
 ```
 
 ### Query in Python
 
 ``` python
+>>> import qzemoji as qe
 >>> qe.proxy = "http://localhost:1234"
 >>> await qe.query(400343)      # this will auto update database, so set a proxy in advance.
 '🐷'

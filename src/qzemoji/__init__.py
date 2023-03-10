@@ -18,9 +18,8 @@ from typing_extensions import ParamSpec
 from .base import AsyncEngineFactory
 from .finddb import FindDB
 from .orm import EmojiTable
-from .utils import resolve
 
-__all__ = ["auto_update", "resolve", "query", "set", "export"]
+__all__ = ["auto_update", "query", "set", "export"]
 
 
 proxy: Optional[ProxiesTypes] = None

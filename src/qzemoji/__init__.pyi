@@ -4,9 +4,7 @@ from typing import Optional
 
 from httpx._types import ProxiesTypes
 
-from .utils import resolve
-
-__all__ = ["auto_update", "resolve", "query", "set", "export"]
+__all__ = ["auto_update", "query", "set", "export"]
 
 proxy: Optional[ProxiesTypes]
 enable_auto_update: bool
