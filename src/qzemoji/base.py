@@ -38,9 +38,10 @@ class AsyncSessionProvider:
     It also provides some common methods.
     """
 
-    def __init__(self, engine: AsyncEngine) -> None:
+    def __init__(self, engine: AsyncEngine, *args, **kwds) -> None:
         self.engine = engine
         self._sess = sessionmaker(engine)
+        super().__init__(*args, **kwds)
 
     @property
     def sess(self):
