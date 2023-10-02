@@ -1,14 +1,13 @@
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
-from httpx import URL
-from httpx._types import URLTypes
+from yarl import URL
 
 import qzemoji as qe
 
 
-def resolve(*, url: Optional[URLTypes] = None, tag: Optional[str] = None):
+def resolve(*, url: Union[URL, str, None] = None, tag: Optional[str] = None):
     """
     The resolve function takes either a URL or a tag as an argument, and returns the emoji ID.
 

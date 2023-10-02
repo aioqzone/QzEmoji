@@ -1,11 +1,11 @@
-import asyncio
 import re
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
-from httpx import AsyncClient
-from httpx._types import ProxiesTypes
+from aiofiles import open as aopen
+from aiohttp import ClientSession as AsyncClient
+from yarl import URL
 
 from qzemoji.base import AsyncEngineFactory
 from qzemoji.orm import EmojiTable
@@ -23,7 +23,11 @@ class FindDB:
 
     @classmethod
     async def download(
-        cls, *, client: Optional[AsyncClient] = None, proxy: Optional[ProxiesTypes] = None
+        cls,
+        *,
+        client: Optional[AsyncClient] = None,
+        proxy: Union[str, URL, None] = None,
+        buffer_size=4096,
     ) -> bool:
         """
         The download function downloads the latest version of the emoji database from GitHub.
@@ -31,18 +35,17 @@ class FindDB:
 
         :param client: use this client, otherwise we will create one and close it on return.
         :param proxy: Used to pass a proxy to the download function, defaults to None.
-        :param current_version: Used to check if the current version of the plugin is greater than or equal to the one on GitHub, defaults to None.
         :return: if downloaded.
         """
         if client is None:
-            async with AsyncClient(proxies=proxy, follow_redirects=True) as client:
-                return await cls.download(client=client, proxy=proxy)
+            async with AsyncClient(trust_env=proxy is None) as client:
+                return await cls.download(client=client, proxy=proxy, buffer_size=buffer_size)
 
         async def get_online_url() -> Optional[str]:
             r = await client.get(
-                "https://aioqzone.github.io/aioqzone-index/simple/qzemoji/index.html"
+                "https://aioqzone.github.io/aioqzone-index/simple/qzemoji/index.html", proxy=proxy
             )
-            m = re.search(r'<a\s+href="(http.*)">\s*emoji.db\s*</a>', r.text)
+            m = re.search(r'<a\s+href="(http.*)">\s*emoji.db\s*</a>', await r.text())
             return m and m.group(1)
 
         url = None
@@ -60,15 +63,14 @@ class FindDB:
             url = FALLBACK_DB
 
         cls.predefined.parent.mkdir(exist_ok=True)
-        async with client.stream("GET", url) as r:
-            with open(cls.predefined, "wb") as f:
-                async for b in r.aiter_bytes():
-                    f.write(b)
+        async with client.get(url, proxy=proxy) as r, aopen(cls.predefined, "wb") as f:
+            async for b in r.content.iter_chunked(buffer_size):
+                await f.write(b)
 
         return True
 
     @classmethod
-    async def find(cls, proxy: Optional[ProxiesTypes] = None) -> Optional[Path]:
+    async def find(cls, proxy: Union[URL, str, None] = None) -> Optional[Path]:
         """
         Find the database file or download if not exists.
 
