@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "qzemoji"
-version = "6.0.0"
+version = "6.0.1"
 description = "Translate Qzone emoji link to text."
 authors = ["aioqzone <zzzzss990315@gmail.com>"]
 license = "MIT"
@@ -10,9 +10,9 @@ repository = "https://github.com/aioqzone/QzEmoji"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-aiohttp = "^3.8.5"
-aiofiles = "^23.2.1"
-SQLAlchemy = { version = "^2.0.10", extras = ["asyncio", "aiosqlite"] }
+aiohttp = "^3.8"
+aiofiles = "^23.1"
+SQLAlchemy = { version = "^2.0", extras = ["asyncio", "aiosqlite"] }
 PyYAML = "^6.0"
 
 [tool.poetry.group.test]
