@@ -32,11 +32,14 @@ ValueError('[em] e400343[/em]')
 ### Query in Python
 
 ``` python
->>> import qzemoji as qe
->>> qe.proxy = "http://localhost:1234"
->>> await qe.query(400343)      # this will auto update database, so set a proxy in advance.
+>>> import qzemoji as qe        # this will auto update database, so set a proxy in advance.
+>>> await qe.query(400343)
 '🐷'
 ```
+
+> [!NOTE]
+> 目前，QzEmoji 使用发布在 aioqzone-index 上的数据库。这意味着您可能需要在导入 qzemoji 之前配置代理。
+> QzEmoji 将读取 `HTTP_PROXY`, `HTTPS_PROXY`, `WS_PROXY`, `WSS_PROXY`。
 
 #### Auto Update
 
@@ -51,7 +54,6 @@ qe.enable_auto_update = False
 目前从GitHub检查更新. 您可以按如下方式设置代理:
 
 ``` python
->>> qe.proxy = "http://localhost:1234"
 >>> await qe.auto_update()
 ```
 

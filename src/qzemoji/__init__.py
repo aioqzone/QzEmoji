@@ -1,8 +1,7 @@
 """
 >>> import qzemoji as qe
->>> qe.proxy = "http://localhost:1234"
->>> await qe.init()     # will auto update database, so set a proxy if needed.
->>> qe.resolve(url='http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
+>>> import qzemoji.utils as qeu
+>>> qeu.resolve(url='http://qzonestyle.gtimg.cn/qzone/em/e400343.gif')
 400343
 >>> await qe.query(400343)
 '🐷'
@@ -10,9 +9,8 @@
 
 import asyncio
 from functools import wraps
-from typing import Any, Awaitable, Callable, Coroutine, Optional, TypeVar
+from typing import Any, Awaitable, Callable, Coroutine, TypeVar
 
-from httpx._types import ProxiesTypes
 from typing_extensions import ParamSpec
 
 from .base import AsyncEngineFactory
@@ -22,7 +20,6 @@ from .orm import EmojiTable
 __all__ = ["auto_update", "query", "set", "export"]
 
 
-proxy: Optional[ProxiesTypes] = None
 enable_auto_update = True
 __singleton__: EmojiTable = None  # type: ignore
 
@@ -43,7 +40,7 @@ async def auto_update():
     global enable_auto_update
     if enable_auto_update:
         try:
-            await FindDB.download(proxy=proxy)
+            await FindDB.download(proxy=None)  # use env proxy
         finally:
             enable_auto_update = False
 
@@ -57,7 +54,7 @@ async def auto_update():
 
 def auto_update_decorator(func: Callable[P, Awaitable[T]]) -> Callable[P, Coroutine[Any, Any, T]]:
     @wraps(func)
-    async def auto_update_wrapper(*args: P.args, **kwds: P.kwargs):
+    async def auto_update_wrapper(*args: P.args, **kwds: P.kwargs) -> T:
         await auto_update()
         return await func(*args, **kwds)
 
