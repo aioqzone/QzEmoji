@@ -63,7 +63,9 @@ class FindDB:
             url = FALLBACK_DB
 
         cls.predefined.parent.mkdir(exist_ok=True)
-        async with client.get(url, proxy=proxy) as r, aopen(cls.predefined, "wb") as f:
+        async with client.get(url, proxy=proxy, allow_redirects=True) as r, aopen(
+            cls.predefined, "wb"
+        ) as f:
             async for b in r.content.iter_chunked(buffer_size):
                 await f.write(b)
 
