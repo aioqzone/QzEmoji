@@ -9,6 +9,5 @@ updates:
   - package-ecosystem: pip
     directory: "/"
     schedule:
-      interval: weekly
-    versioning-strategy: increase-if-necessary
+      interval: daily
     reviewers: [JamzumSum]
