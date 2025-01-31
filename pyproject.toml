@@ -2,7 +2,7 @@
 name = "qzemoji"
 version = "6.1.0"
 description = "Translate Qzone emoji link to text."
-authors = ["aioqzone <zzzzss990315@gmail.com>"]
+authors = ["aioqzone <22952836+JamzumSum@users.noreply.github.com>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/aioqzone/QzEmoji"

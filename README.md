@@ -2,9 +2,10 @@
 
 将Qzone表情链接转换为文字.
 
-[![python](https://img.shields.io/badge/python-3.8%20%7C%203.11-blue)][homepage]
-[![Test](https://github.com/aioqzone/QzEmoji/actions/workflows/test.yml/badge.svg?branch=async)](https://github.com/aioqzone/QzEmoji/blob/async/.github/workflows/test.yml)
-[![rules](https://img.shields.io/tokei/lines/github/aioqzone/QzEmoji?label=rules)](CONTRIBUTING.md)
+[![python](https://img.shields.io/badge/python-3.9%20%7C%203.13-blue)][homepage]
+[![Test](https://github.com/aioqzone/QzEmoji/actions/workflows/test.yml/badge.svg)](https://github.com/aioqzone/QzEmoji/blob/beta/.github/workflows/test.yml)
+[![rules](https://img.shields.io/endpoint?url=https%3A%2F%2Fghloc.vercel.app%2Fapi%2Faioqzone%2FQzEmoji%2Fbadge%3Ffilter%3Demoji.yml%24&color=green
+)](CONTRIBUTING.md)
 [![black](https://img.shields.io/badge/code%20style-black-000000)](https://github.com/psf/black)
 
 This project is a component of [Qzone3TG][qzone2tg].

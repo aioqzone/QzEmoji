@@ -72,7 +72,7 @@ jobs:
       - name: Add to aioqzone-index
         env:
           urls: ${{ steps.rehash.outputs.urls }}
-          GH_TOKEN: ${{ secrets.REPO_TOKEN }} # this is a fine-grained PAT
+          GH_TOKEN: ${{ secrets.INDEX_TOKEN }} # this is a fine-grained PAT
         run: |
           gh workflow -R ${{ env.index-repo }} run add.yml \
                       -f project=QzEmoji \
