@@ -45,7 +45,7 @@ class FindDB:
             r = await client.get(
                 "https://aioqzone.github.io/aioqzone-index/simple/qzemoji/index.html", proxy=proxy
             )
-            m = re.search(r'<a\s+href="(http.*)">\s*emoji.db\s*</a>', await r.text())
+            m = re.search(r'<a\s+href="(http[^"]+)">\s*emoji.db\s*</a>', await r.text())
             return m and m.group(1)
 
         url = None
@@ -63,9 +63,10 @@ class FindDB:
             url = FALLBACK_DB
 
         cls.predefined.parent.mkdir(exist_ok=True)
-        async with client.get(url, proxy=proxy, allow_redirects=True) as r, aopen(
-            cls.predefined, "wb"
-        ) as f:
+        async with (
+            client.get(url, proxy=proxy, allow_redirects=True) as r,
+            aopen(cls.predefined, "wb") as f,
+        ):
             async for b in r.content.iter_chunked(buffer_size):
                 await f.write(b)
 

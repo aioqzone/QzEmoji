@@ -26,18 +26,20 @@ async def test_autoUpdate():
 
 async def test_update():
     await FindDB.download()
-    async with AsyncEngineFactory.sqlite3(
-        FindDB.my_db, echo=True
-    ) as local, AsyncEngineFactory.sqlite3(None) as mem:
+    async with (
+        AsyncEngineFactory.sqlite3(FindDB.my_db, echo=True) as local,
+        AsyncEngineFactory.sqlite3(None) as mem,
+    ):
         mem_table = EmojiTable(mem)
         await mem_table.update(local)
         assert await mem_table.query(100) != "100"
 
 
 async def test_sha256():
-    async with AsyncEngineFactory.sqlite3(FindDB.my_db) as local, AsyncEngineFactory.sqlite3(
-        None
-    ) as mem:
+    async with (
+        AsyncEngineFactory.sqlite3(FindDB.my_db) as local,
+        AsyncEngineFactory.sqlite3(None) as mem,
+    ):
         h1 = await EmojiTable(local).sha256()
         mem_table = EmojiTable(mem)
         await mem_table.update(local)
