@@ -6,7 +6,6 @@ from typing import Optional, cast
 
 import sqlalchemy as sa
 import yaml
-from sqlalchemy import select
 from sqlalchemy.engine import Inspector
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import async_sessionmaker as sessionmaker
@@ -16,7 +15,7 @@ from .base import AsyncSessionProvider
 
 
 class Base(MappedAsDataclass, DeclarativeBase):
-    pass
+    __slots__ = ()
 
 
 class EmojiOrm(Base):
@@ -34,9 +33,11 @@ class MyEmoji(Base):
 
 
 class EmojiTable(AsyncSessionProvider):
+    __slots__ = ()
+
     async def create(self, conn=None):
         """
-        The create function creates `Emoji` and `MyEmoji` table in the database.
+        The create function creates ``Emoji`` and ``MyEmoji`` table in the database.
         It takes no arguments and returns nothing.
 
         :param conn: use this connection, otherwise we will create one and close it on return.
@@ -48,7 +49,7 @@ class EmojiTable(AsyncSessionProvider):
             insp = sa.inspect(conn)
             return insp.has_table("Emoji") and insp.has_table("MyEmoji")
 
-        async with self.engine.begin() as conn:
+        async with self.engine.connect() as conn:
             return not await conn.run_sync(test2)
 
     async def query(self, eid: int) -> Optional[str]:
@@ -61,12 +62,12 @@ class EmojiTable(AsyncSessionProvider):
         :return: a string representation of the emoji, or None if not found.
         """
 
-        stmt = select(MyEmoji).where(MyEmoji.eid == eid)
+        stmt = sa.select(MyEmoji).where(MyEmoji.eid == eid)
         async with self.sess() as sess:
             r1 = await sess.scalar(stmt)
             if r1:
                 return r1.text
-            stmt = select(EmojiOrm).where(EmojiOrm.eid == eid)
+            stmt = sa.select(EmojiOrm).where(EmojiOrm.eid == eid)
             r2 = await sess.scalar(stmt)
         if r2:
             return r2.text
@@ -85,7 +86,7 @@ class EmojiTable(AsyncSessionProvider):
 
         async with self.sess() as sess:
             async with sess.begin():
-                prev = await sess.scalar(select(MyEmoji).where(MyEmoji.eid == eid))
+                prev = await sess.scalar(sa.select(MyEmoji).where(MyEmoji.eid == eid))
                 if prev:
                     # if exist: update
                     prev.text = text
@@ -97,18 +98,14 @@ class EmojiTable(AsyncSessionProvider):
     async def update(self, engine: AsyncEngine):
         """
         The update function is used to update the database with new data.
-        It drops `Emoji` table in current database, and import all data from the given engine.
+        It drops ``Emoji`` table in current database, and import all data from the given engine.
 
         :param engine: Engine to a new database to get data from.
         :return: None.
-
-        .. versionchanged:: 4.1.0.dev3
-
-            update `Version` table as well
         """
 
         sess = sessionmaker(engine)
-        stmt = select(EmojiOrm)
+        stmt = sa.select(EmojiOrm)
 
         def clear_o_table(c: sa.Connection):
             isp: Optional[Inspector] = sa.inspect(c)
@@ -119,32 +116,36 @@ class EmojiTable(AsyncSessionProvider):
 
         def check_n_table(c: sa.Connection):
             isp: Optional[Inspector] = sa.inspect(c)
-            assert isp.has_table(EmojiOrm.__tablename__), "Incoming database has no `Emoji` table."
+            assert isp is not None
+            if not isp.has_table(EmojiOrm.__tablename__):
+                raise RuntimeError("Incoming database has no `Emoji` table.")
 
         async with self.engine.begin() as oc, engine.begin() as nc:
             # drop if exists, and create again
-            await asyncio.gather(oc.run_sync(clear_o_table), nc.run_sync(check_n_table))
+            await asyncio.gather(
+                oc.run_sync(clear_o_table),
+                nc.run_sync(check_n_table),
+            )
 
-        async with self.sess() as os:
-            async with sess() as ns:
-                objs = (await ns.scalars(stmt)).all()
+        async with self.sess() as os, sess() as ns:
             async with os.begin():
-                os.add_all([EmojiOrm(eid=i.eid, text=i.text) for i in objs])
-            await os.commit()
+                async for i in await ns.stream_scalars(stmt):
+                    os.add(EmojiOrm(eid=i.eid, text=i.text))
+                await os.commit()
 
     async def export(self, path: PathLike, full: bool = True) -> Path:
         """Export emoji table to a yaml file. User may start a PR with this file.
 
         :param path: Where to export
-        :param full: If data in `Emoji` table should be export. Keep this value as True if you'd like to submit a PR.
+        :param full: If data in ``Emoji`` table should be export. Keep this value as True if you'd like to submit a PR.
         :return: export path
 
         .. versionchanged:: 4.0.0
 
-            path is not optional
+            `path` is not optional
         """
-        stmp = select(MyEmoji)
-        stmg = select(EmojiOrm)
+        stmp = sa.select(MyEmoji)
+        stmg = sa.select(EmojiOrm)
         async with self.sess() as sess:
             if full:
                 # rp, rg = await asyncio.gather(sess.scalars(stmp), sess.scalars(stmg))
@@ -173,10 +174,16 @@ class EmojiTable(AsyncSessionProvider):
 
         .. versionadded:: 5.0.0
         """
-        statement = select(EmojiOrm)
+        statement = sa.select(EmojiOrm)
         async with self.sess() as sess:
             r = await sess.scalars(statement)
 
-        d = {o.eid: o.text for o in r}
-        s = ";".join(f"{k}={d[k]}" for k in sorted(d))
-        return sha256(s.encode("utf8")).hexdigest().lower()
+        hasher = sha256()
+        seq = sorted(r, key=lambda x: x.eid)
+
+        for o in seq[:-1]:
+            hasher.update(f"{o.eid}={o.text};".encode())
+        o = seq[-1]
+        hasher.update(f"{o.eid}={o.text}".encode())
+
+        return hasher.hexdigest().lower()

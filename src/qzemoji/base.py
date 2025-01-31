@@ -1,5 +1,4 @@
-"""sqlalchemy infrastructure serving this package (and other sqlalchemy applications).
-"""
+"""sqlalchemy infrastructure serving this package (and other sqlalchemy applications)."""
 
 from pathlib import Path
 from typing import Optional, Type

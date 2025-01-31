@@ -3,6 +3,7 @@ __pycache__
 /.vscode
 *.env
 poetry.toml
+*.dat
 
 # venv
 .venv
