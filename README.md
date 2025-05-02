@@ -95,8 +95,9 @@ select text from emoji where eid=400343;
 ## Build Database
 
 ``` shell
-poetry install --no-dev
-poetry run script/build.py
+# clone and step into this repo
+pip install -e .
+python script/build.py
 ```
 
 ## Contribute
