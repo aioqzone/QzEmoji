@@ -20,21 +20,17 @@ jobs:
         python-version: ["3.13", "3.9"]
     steps:
       - uses: actions/checkout@v4
-      - name: Install Poetry
-        run: pipx install poetry
-
-      - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
-          cache: poetry
+          enable-cache: true
 
       - name: Install and Test
         run: |
           echo "::group::Install Dependencies"
-          poetry install -n -vv
+          uv sync --group test
           echo "::endgroup::"
 
           echo "::group::pytest outputs"
-          poetry run pytest test
+          uv run pytest test
           echo "::endgroup::"

@@ -1,56 +1,37 @@
-[tool.poetry]
+[project]
 name = "qzemoji"
-version = "6.1.0"
+version = "6.1.1"
 description = "Translate Qzone emoji link to text."
-authors = ["aioqzone <22952836+JamzumSum@users.noreply.github.com>"]
+authors = [{ name = "aioqzone" }]
+maintainers = [
+    { name = "JamzumSum", email = "22952836+JamzumSum@users.noreply.github.com" },
+]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/aioqzone/QzEmoji"
-repository = "https://github.com/aioqzone/QzEmoji"
+requires-python = ">=3.9"
+dependencies = [
+    "aiohttp>=3.10",
+    "aiofiles>=24.1",
+    "SQLAlchemy[asyncio,aiosqlite]>=2.0",
+    "PyYAML>=6.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-aiohttp = "^3.10"
-aiofiles = "^24.1"
-SQLAlchemy = { version = "^2.0", extras = ["asyncio", "aiosqlite"] }
-PyYAML = "^6.0"
+[project.urls]
+Homepage = "https://github.com/aioqzone/QzEmoji"
+Repository = "https://github.com/aioqzone/QzEmoji"
 
-[tool.poetry.group.test]
-optional = false
-
-[tool.poetry.group.test.dependencies]
-pytest = "^8.2.1"
-pytest-asyncio = "^0.25.2"
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-black = "*"
-pre-commit = "*"
-isort = "!=5.13.0"
-
-
-[[tool.poetry.source]]
-name = "aioqzone-index"
-url = "https://aioqzone.github.io/aioqzone-index/simple/"
-priority = "supplemental"
+[dependency-groups]
+dev = ["black", "ruff"]
+test = ["pytest>=8.2.1", "pytest-asyncio~=0.26.0"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-
-# customize begin
 [tool.pytest.ini_options]
 pythonpath = 'src'
-log_cli = 1
+log_cli = true
 log_cli_level = 'WARNING'
 
-[tool.isort]
-profile = "black"
-line_length = 99
-
-[tool.black]
+[tool.ruff]
 line-length = 99
-target-version = ['py39']
