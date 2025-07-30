@@ -22,7 +22,7 @@ Repository = "https://github.com/aioqzone/QzEmoji"
 
 [dependency-groups]
 dev = ["black", "ruff"]
-test = ["pytest>=8.2.1", "pytest-asyncio~=0.26.0"]
+test = ["pytest>=8.2.1", "pytest-asyncio~=1.1.0"]
 
 [build-system]
 requires = ["hatchling"]
