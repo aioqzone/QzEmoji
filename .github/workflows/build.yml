@@ -45,7 +45,7 @@ jobs:
           echo "::endgroup::"
 
           echo "::group::install dependencies"
-          uv sync
+          uv sync --no-default-groups
           echo "::endgroup::"
 
           hash=$(uv run script/build.py)

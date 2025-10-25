@@ -1,6 +1,6 @@
 [project]
 name = "qzemoji"
-version = "6.1.1"
+version = "6.2.0"
 description = "Translate Qzone emoji link to text."
 authors = [{ name = "aioqzone" }]
 maintainers = [
@@ -8,11 +8,12 @@ maintainers = [
 ]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "aiohttp>=3.10",
     "aiofiles>=24.1",
-    "SQLAlchemy[asyncio,aiosqlite]>=2.0",
+    "SQLAlchemy[asyncio,aiosqlite]>=2.0.44",
+    "greenlet>=3.2.3",
     "PyYAML>=6.0",
 ]
 
@@ -22,11 +23,11 @@ Repository = "https://github.com/aioqzone/QzEmoji"
 
 [dependency-groups]
 dev = ["black", "ruff"]
-test = ["pytest>=8.2.1", "pytest-asyncio~=1.2.0"]
+test = ["pytest>=8.2.1", "pytest-asyncio~=1.1"]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build"]
+build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 pythonpath = 'src'
