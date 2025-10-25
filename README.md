@@ -2,7 +2,7 @@
 
 将Qzone表情链接转换为文字.
 
-[![python](https://img.shields.io/badge/python-3.9%20%7C%203.13-blue)][homepage]
+[![python](https://img.shields.io/badge/python-3.10%20%7C%203.14-blue)][homepage]
 [![Test](https://github.com/aioqzone/QzEmoji/actions/workflows/test.yml/badge.svg)](https://github.com/aioqzone/QzEmoji/blob/beta/.github/workflows/test.yml)
 [![rules](https://img.shields.io/endpoint?url=https%3A%2F%2Fghloc.vercel.app%2Fapi%2Faioqzone%2FQzEmoji%2Fbadge%3Ffilter%3Demoji.yml%24&color=green
 )](CONTRIBUTING.md)
