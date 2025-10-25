@@ -28,7 +28,7 @@ jobs:
       - name: Install and Test
         run: |
           echo "::group::Install Dependencies"
-          uv sync --group test
+          uv sync --no-default-groups --group test
           echo "::endgroup::"
 
           echo "::group::pytest outputs"
