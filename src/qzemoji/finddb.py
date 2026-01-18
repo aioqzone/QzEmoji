@@ -86,7 +86,7 @@ class FindDB:
 
         try:
             await cls.download(proxy=proxy)
-        except:
+        except BaseException:
             return
 
         # my_db not exist, so move will not overwrite

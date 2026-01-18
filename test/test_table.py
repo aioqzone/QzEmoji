@@ -21,7 +21,7 @@ async def test_resolve():
 
 async def test_autoUpdate():
     await qe.auto_update()
-    assert qe.enable_auto_update == False
+    assert not qe.enable_auto_update
 
 
 async def test_update():

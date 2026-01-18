@@ -27,7 +27,7 @@ async def test_build():
     h2 = sha256(s.encode("utf8")).hexdigest().lower()
     assert h1 == h2
 
-    out = Path(f"tmp/build.db")
+    out = Path("tmp/build.db")
 
     async with AsyncEngineFactory.sqlite3(out) as engine:
         built = EmojiTable(engine)
