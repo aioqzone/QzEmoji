@@ -58,6 +58,14 @@ qe.enable_auto_update = False
 >>> await qe.auto_update()
 ```
 
+#### Close Database
+
+QzEmoji 会自动打开/创建数据库，如果需要手动关闭，只需：
+
+```python
+>>> qe.close()
+```
+
 #### Customize Your Copy
 
 您可以随意修改`emoji.db`以适应用户的需要. 自定义内容存储在`MyEmoji`表中，与`Emoji`表隔离. 自动更新只会更新`Emoji`表，自定义内容保持不变。自定义内容优先级高于默认（`MyEmoji`优先于`Emoji`）.

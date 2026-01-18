@@ -3,9 +3,8 @@
 from pathlib import Path
 from typing import Optional, Type
 
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker as sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
 
