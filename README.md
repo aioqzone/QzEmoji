@@ -6,7 +6,6 @@
 [![Test](https://github.com/aioqzone/QzEmoji/actions/workflows/test.yml/badge.svg)](https://github.com/aioqzone/QzEmoji/blob/beta/.github/workflows/test.yml)
 [![rules](https://img.shields.io/endpoint?url=https%3A%2F%2Fghloc.vercel.app%2Fapi%2Faioqzone%2FQzEmoji%2Fbadge%3Ffilter%3Demoji.yml%24&color=green
 )](CONTRIBUTING.md)
-[![black](https://img.shields.io/badge/code%20style-black-000000)](https://github.com/psf/black)
 
 This project is a component of [Qzone3TG][qzone2tg].
 

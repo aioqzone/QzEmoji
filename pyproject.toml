@@ -1,6 +1,6 @@
 [project]
 name = "qzemoji"
-version = "7.0.0"
+version = "7.0.1"
 description = "Translate Qzone emoji link to text."
 authors = [{ name = "aioqzone" }]
 maintainers = [
@@ -22,7 +22,7 @@ Homepage = "https://github.com/aioqzone/QzEmoji"
 Repository = "https://github.com/aioqzone/QzEmoji"
 
 [dependency-groups]
-dev = ["black", "ruff"]
+dev = ["ruff"]
 test = ["pytest>=8.2.1", "pytest-asyncio~=1.1"]
 
 [build-system]
