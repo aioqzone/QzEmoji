@@ -14,7 +14,7 @@ dependencies = [
     "aiofiles>=24.1",
     "SQLAlchemy[asyncio,aiosqlite]>=2.0.44",
     "greenlet>=3.2.3",
-    "PyYAML>=6.0",
+    "PyYAML>=6.0.3",
 ]
 
 [project.urls]
