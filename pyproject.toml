@@ -12,7 +12,7 @@ requires-python = ">=3.10"
 dependencies = [
     "aiohttp>=3.13.3",
     "aiofiles>=24.1",
-    "SQLAlchemy[asyncio,aiosqlite]>=2.0.44",
+    "SQLAlchemy[asyncio,aiosqlite]>=2.0.49",
     "greenlet>=3.2.3",
     "PyYAML>=6.0",
 ]
